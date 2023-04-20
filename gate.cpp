@@ -5,7 +5,6 @@
 #include <vector>
 #include <algorithm>
 #include <stdlib.h>
-
 #include "complex.h"
 #include "matrix.h"
 #include "qubit.h"
@@ -66,7 +65,7 @@ std::string I::get_name() const
 {
 	return name;
 }
-
+//HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 H::H(const H& input_H) 
 {
 	gate = input_H.gate;
@@ -560,77 +559,185 @@ std::string one::get_name() const
 {
 	return name;
 }
-//controllllllllllllllllllllllllllll
-control_U::control_U(const control_U& input_H)
+//padding
+padding::padding(const padding& input_H)
 {
 	gate = input_H.gate;
 	name = input_H.name;
 }
-control_U::control_U(control_U&& input_H) noexcept
+padding::padding(padding&& input_H) noexcept
 {
 	gate = input_H.gate;
 	name = input_H.name;
 	input_H.gate.clear();
-	input_H.name = "U";
+	input_H.name = "-";
 }
 
-control_U& control_U::operator=(const control_U& right_gate)
+padding& padding::operator=(const padding& right_gate)
 {
 	if (&right_gate == this) return *this;
 	gate = right_gate.gate;
 	name = right_gate.name;
 	return *this;
 }
-control_U& control_U::operator=(control_U&& right_gate) noexcept
+padding& padding::operator=(padding&& right_gate) noexcept
 {
 	std::swap(gate, right_gate.gate);
 	std::swap(name, right_gate.name);
 	return *this;
 }
-gates* control_U::operator*(const gates& right_gate) const
+gates* padding::operator*(const gates& right_gate) const
 {
-	const control_U& other_H = dynamic_cast<const control_U&>(right_gate);
+	const padding& other_H = dynamic_cast<const padding&>(right_gate);
 	return new O(gate * other_H.gate);
 }
-qubit control_U::operator*(const qubit& input_qubit) const
+qubit padding::operator*(const qubit& input_qubit) const
 {
 	matrix<complex<double>> new_matrix = gate * input_qubit.get_basis_1() * input_qubit.get_coefficient_1() + gate * input_qubit.get_basis_2() * input_qubit.get_coefficient_2();
 	qubit new_qubit(new_matrix[0], new_matrix[1]);
 	return new_qubit;
 }
-
-control_U control_U::get_gate() const
+padding padding::get_gate() const
 {
 	return *this;
 }
-matrix<complex<double>> control_U::matrix_gate() const
+matrix<complex<double>> padding::matrix_gate() const
 {
 	return gate;
 }
-void control_U::change_name(std::string input_name)
+void padding::change_name(std::string input_name)
 {
-
 	name = input_name;
 }
-std::string control_U::get_name() const
+std::string padding::get_name() const
 {
 	return name;
 }
-void control_U::set_position(std::string input_position)
+//phase
+P::P(const P& input_H)
 {
-	std::string s1;
-	std::stringstream ss(input_position);
-	position.clear();
-	while (std::getline(ss, s1, ','))
-	{
-		position.push_back(s1);
-	}
+	gate = input_H.gate;
+	name = input_H.name;
+}
+P::P(P&& input_H) noexcept
+{
+	gate = input_H.gate;
+	name = input_H.name;
+	input_H.gate.clear();
+	input_H.name = "P";
+}
+P& P::operator=(const P& right_gate)
+{
+	if (&right_gate == this) return *this;
+	gate = right_gate.gate;
+	name = right_gate.name;
+	return *this;
+}
+P& P::operator=(P&& right_gate) noexcept
+{
+	std::swap(gate, right_gate.gate);
+	std::swap(name, right_gate.name);
+	return *this;
+}
+gates* P::operator*(const gates& right_gate) const
+{
+	const P& other_H = dynamic_cast<const P&>(right_gate);
+	return new O(gate * other_H.gate);
+}
+qubit P::operator*(const qubit& input_qubit) const
+{
+	matrix<complex<double>> new_matrix = gate * input_qubit.get_basis_1() * input_qubit.get_coefficient_1() + gate * input_qubit.get_basis_2() * input_qubit.get_coefficient_2();
+	qubit new_qubit(new_matrix[0], new_matrix[1]);
+	return new_qubit;
+}
+P P::get_gate() const
+{
+	return *this;
+}
+matrix<complex<double>> P::matrix_gate() const
+{
+	return gate;
+}
+void P::change_name(std::string input_name)
+{
+	name = input_name;
+}
+std::string P::get_name() const
+{
+	return name;
+}
 
-}
-std::vector<std::string> control_U::get_position() 
-{
-	return position;
-}
+//controllllllllllllllllllllllllllll
+//control_U::control_U(const control_U& input_H)
+//{
+//	gate = input_H.gate;
+//	name = input_H.name;
+//}
+//control_U::control_U(control_U&& input_H) noexcept
+//{
+//	gate = input_H.gate;
+//	name = input_H.name;
+//	input_H.gate.clear();
+//	input_H.name = "U";
+//}
+//
+//control_U& control_U::operator=(const control_U& right_gate)
+//{
+//	if (&right_gate == this) return *this;
+//	gate = right_gate.gate;
+//	name = right_gate.name;
+//	return *this;
+//}
+//control_U& control_U::operator=(control_U&& right_gate) noexcept
+//{
+//	std::swap(gate, right_gate.gate);
+//	std::swap(name, right_gate.name);
+//	return *this;
+//}
+//gates* control_U::operator*(const gates& right_gate) const
+//{
+//	const control_U& other_H = dynamic_cast<const control_U&>(right_gate);
+//	return new O(gate * other_H.gate);
+//}
+//qubit control_U::operator*(const qubit& input_qubit) const
+//{
+//	matrix<complex<double>> new_matrix = gate * input_qubit.get_basis_1() * input_qubit.get_coefficient_1() + gate * input_qubit.get_basis_2() * input_qubit.get_coefficient_2();
+//	qubit new_qubit(new_matrix[0], new_matrix[1]);
+//	return new_qubit;
+//}
+//
+//control_U control_U::get_gate() const
+//{
+//	return *this;
+//}
+//matrix<complex<double>> control_U::matrix_gate() const
+//{
+//	return gate;
+//}
+//void control_U::change_name(std::string input_name)
+//{
+//
+//	name = input_name;
+//}
+//std::string control_U::get_name() const
+//{
+//	return name;
+//}
+//void control_U::set_position(std::string input_position)
+//{
+//	std::string s1;
+//	std::stringstream ss(input_position);
+//	position.clear();
+//	while (std::getline(ss, s1, ','))
+//	{
+//		position.push_back(s1);
+//	}
+//
+//}
+//std::vector<std::string> control_U::get_position() 
+//{
+//	return position;
+//}
 
 
 

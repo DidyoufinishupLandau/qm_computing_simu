@@ -16,16 +16,21 @@ wires::wires() :qubit{}//default constructor, set the qubit to be |0> with proba
 {}
 wires::wires(int initial_qubit_state) : qubit{}
 {
+	complex<double> one(1, 0);
+	complex<double> zero(0, 0);
 	if(initial_qubit_state==1)
 	{
-		coefficient_2 = 1;
-		coefficient_1 = 0;
+		coefficient_2 = one;
+		coefficient_1 = zero;
+		return;
 	}
 	if (initial_qubit_state == 0)
 	{
-		coefficient_2 = 0;
-		coefficient_1 = 1;
+		coefficient_2 = zero;
+		coefficient_1 = one;
+		return;
 	}
+	else { std::cout << "Invalid qubit state" << std::endl; exit(0); }
 }
 wires::wires(const wires& input_wire) :qubit(input_wire.basis_1, input_wire.basis_2, input_wire.coefficient_1, input_wire.coefficient_2)
 {
@@ -38,11 +43,12 @@ wires::wires(const wires& input_wire) :qubit(input_wire.basis_1, input_wire.basi
 
 wires::wires(wires&& input_wire) noexcept : qubit(input_wire.get_qubit())
 {
-
+	complex<double> one(1, 0);
+	complex<double> zero(0, 0);
 	operation = input_wire.operation;
 	input_wire.operation.clear();
-	input_wire.coefficient_1 = 1;
-	input_wire.coefficient_2 = 0;
+	input_wire.coefficient_1 = one;
+	input_wire.coefficient_2 = zero;
 	"1;0" >> input_wire.basis_1;
 	"0;1" >> input_wire.basis_2;
 }
@@ -85,13 +91,17 @@ void wires::change_qubit(int input_int)
 {
 	if (input_int == 1)
 	{
-		coefficient_2 = 1;
-		coefficient_1 = 0;
+		complex<double> one(1, 0);
+		complex<double> zero(0, 0);
+		coefficient_2 = one;
+		coefficient_1 = zero;
 	}
 	if (input_int == 0)
 	{
-		coefficient_2 = 0;
-		coefficient_1 = 1;
+		complex<double> one(1, 0);
+		complex<double> zero(0, 0);
+		coefficient_2 = zero;
+		coefficient_1 = one;
 	}
 	else { std::cout << "invalid qubit state" << std::endl; exit(0); }
 }
@@ -105,7 +115,7 @@ void wires::insert_gate(int n_th_gate, gates* input_gate)
 	//after n gates
 	try
 	{
-		operation.at(n_th_gate);
+		gates* _ = operation.at(n_th_gate);
 		operation.insert(operation.begin() + n_th_gate, input_gate);
 	}
 	catch (const std::out_of_range& error)
@@ -123,14 +133,7 @@ void wires::push_gate(gates* input_gate)
 }
 void wires::print()
 {
-	matrix<complex<double>> summed_basis;
-	summed_basis = basis_1 * coefficient_1 + basis_2 * coefficient_2;
-	if (coefficient_1.modulus() == 0) { std::cout << coefficient_2 << "|1>"; }
-	if (coefficient_2.modulus() == 0) { std::cout << coefficient_1 << "|0>"; }
-	else
-	{ 
-		std::cout << coefficient_1 << "|0>" << coefficient_2 << "|1>"; 
-	}
+	std::cout << get_qubit() << std::endl;;
 
 	for (size_t i{ 0 }; i < operation.size(); i++)
 	{
@@ -143,7 +146,7 @@ void wires::insert_gate(int n_th_gate, int num_gate, gates* input_gate)
 {
 	try
 	{
-		operation.at(n_th_gate);
+		gates* _ = operation.at(n_th_gate);
 		if (n_th_gate > 0 || n_th_gate == 0)
 		{
 			operation.insert(operation.begin() + n_th_gate, num_gate, input_gate);
@@ -164,10 +167,10 @@ void wires::push_gate(int num_gate, gates* input_gate)
 	{
 		for (size_t i{}; i < num_gate; i++)
 		{
-			//catch?
 			operation.push_back(input_gate);
 		}
 	}
+	if (num_gate == 0) { return; }
 
 }
 int wires::size() const 
@@ -188,7 +191,7 @@ void wires::delete_gate(int input_int)
 {
 	try
 	{
-		operation.at(input_int - 1);
+		gates* _ = operation.at(input_int - 1);
 		std::vector<gates*> temp_operation;
 		for (size_t i{}; i < operation.size(); i++)
 		{
@@ -210,5 +213,16 @@ void wires::delete_gate(int input_int)
 }
 void wires::change_gate(int n_th_gate, gates* input_gate) 
 {
-	operation[n_th_gate - 1] = input_gate;
+	try
+	{
+		gates* _ = operation.at(n_th_gate - 1);
+		operation[n_th_gate - 1] = input_gate;
+	}
+	catch (const std::out_of_range& error) 
+	{
+		std::cerr << "Exception: " << error.what() << std::endl;
+		std::cout << "change gate position invalid " << std::endl;
+		std::cout << "Exit program..." << std::endl;
+		exit(0);
+	}
 }

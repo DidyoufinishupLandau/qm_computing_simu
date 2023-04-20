@@ -70,11 +70,8 @@ namespace namespace_one {
 		friend void operator>> <c_type>(std::string input_string, matrix<c_type>& input_matrix);
     };
 }
+//template class implementation
 using namespace namespace_one;
-//matrix<complex<double>> to_complex() 
-//{
-//
-//}
 template<class c_type> matrix<c_type> matrix<c_type>::get_self()
 {
 	return *this;
@@ -239,39 +236,6 @@ template<class c_type> matrix<c_type> matrix<c_type>::operator*(const c_type& in
 	for (size_t i{ 0 }; i < size; i++) { new_matrix.data[i] = data[i] * input; }
 	return new_matrix;
 }
-
-//template<class c_type> matrix<c_type> matrix<c_type>::operator*(const complex<c_type>& input) const
-//{
-//	std::cout << "here";
-//	matrix<complex<c_type>> new_matrix(num_rows, num_columns);
-//	for (size_t i{ 0 }; i < size; i++) { data[i] = input * data[i]; }
-//	return new_matrix;
-//}
-
-//template<class c_type> matrix<c_type> namespace_one::operator*(const double& input_double, const matrix<c_type>& input_matrix)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const double& input_double)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const c_type& input_c_type, const matrix<c_type>& input_matrix)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const c_type& input_c_type)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
-//	return new_matrix;
-//}
 template<class c_type> matrix<c_type> matrix<c_type>::_delete(size_t del_row, size_t del_column)
 {
 	size_t new_rows = num_rows;
@@ -382,7 +346,6 @@ template<class c_type> c_type matrix<c_type>::det()
 	c_type determinant = 0;
 	return determinant;
 }
-
 template<class c_type> matrix<c_type> matrix<c_type>::clear()
 {
 	num_rows = 0;
@@ -519,7 +482,6 @@ template<class c_type> std::ostream& namespace_one::operator<< (std::ostream& os
 				ostream << input_matrix[j + i * column] << ", ";
 			}
 		}
-		ostream << std::endl;
 	}
 	if (size == 0)
 	{
@@ -574,3 +536,35 @@ template<class c_type> void namespace_one::operator>> (std::string input_string,
 	}
 }
 #endif // MATRIX_H
+
+//template<class c_type> matrix<c_type> matrix<c_type>::operator*(const complex<c_type>& input) const
+//{
+//	std::cout << "here";
+//	matrix<complex<c_type>> new_matrix(num_rows, num_columns);
+//	for (size_t i{ 0 }; i < size; i++) { data[i] = input * data[i]; }
+//	return new_matrix;
+//}
+//template<class c_type> matrix<c_type> namespace_one::operator*(const double& input_double, const matrix<c_type>& input_matrix)
+//{
+//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
+//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
+//	return new_matrix;
+//}
+//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const double& input_double)
+//{
+//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
+//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
+//	return new_matrix;
+//}
+//template<class c_type> matrix<c_type> namespace_one::operator*(const c_type& input_c_type, const matrix<c_type>& input_matrix)
+//{
+//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
+//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
+//	return new_matrix;
+//}
+//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const c_type& input_c_type)
+//{
+//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
+//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
+//	return new_matrix;
+//}

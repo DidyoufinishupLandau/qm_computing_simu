@@ -1,6 +1,6 @@
 #pragma once
-#ifndef TEST_H
-#define TEST_H
+#ifndef GATE_H
+#define GATE_H
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -62,6 +62,16 @@ private:
 	matrix<complex<double>> gate;
 	std::string name;
 public:
+	O(complex<double> complex_1, complex<double> complex_2, complex<double> complex_3, complex<double> complex_4)
+	{
+		matrix<complex<double>> new_matrix(2, 2);
+		new_matrix[0] = complex_1;
+		new_matrix[1] = complex_2;
+		new_matrix[2] = complex_3;
+		new_matrix[3] = complex_4;
+		gate = new_matrix;
+		name = "O";
+	}
 	O(matrix<complex<double>> input_matrix)
 	{
 		gate = input_matrix;
@@ -122,11 +132,13 @@ public:
 	Y()
 	{
 		matrix<complex<double>> temp(2, 2);
-		complex<double> temp_complex(0, 1);
-		temp[0] = 0;
-		temp[1] = temp_complex;
-		temp[2] = temp_complex * (-1);
-		temp[3] = 0;
+		complex<double> one(0, 1);
+		complex<double> negative_one(0, -1);
+		complex<double> zero(0, 0);
+		temp[0] = zero;
+		temp[1] = one;
+		temp[2] = negative_one;
+		temp[3] = zero;
 		gate = temp;
 		name = "Y";
 	}
@@ -217,7 +229,7 @@ public:
 	T()
 	{
 		matrix<complex<double>> temp(2, 2);
-		complex<double> temp_complex(std::cos(3.1415926535897832384 / 4), std::sin(3.1415926535897832384 / 4));
+		complex<double> temp_complex(std::cos(3.14159265358979 / 4), std::sin(3.14159265358979 / 4));
 		temp[0] = 1;
 		temp[1] = 0;
 		temp[2] = 0;
@@ -267,6 +279,38 @@ public:
 	qubit operator*(const qubit& input_qubit) const override;
 
 	I get_gate() const;
+	matrix<complex<double>> matrix_gate() const;
+	void change_name(std::string input_name);
+	std::string get_name() const;
+};
+class P :public gates
+{
+private:
+	matrix<complex<double>> gate;
+	std::string name;
+public:
+	P(double angle)
+	{
+		matrix<complex<double>> temp(2, 2);
+		complex<double> phase(std::cos(angle), std::sin(angle));
+		temp[0] = 1;
+		temp[1] = 0;
+		temp[2] = 0;
+		temp[3] = phase;
+		gate = temp;
+		name = "P";
+	}
+	~P() {};
+
+	P(const P& input_H);
+	P(P&& input_matrix) noexcept;
+
+	P& operator=(const P& right_gate);
+	P& operator=(P&& right_gate) noexcept;
+	gates* operator*(const gates& right_gate) const override;
+	qubit operator*(const qubit& input_qubit) const override;
+
+	P get_gate() const;
 	matrix<complex<double>> matrix_gate() const;
 	void change_name(std::string input_name);
 	std::string get_name() const;
@@ -333,34 +377,65 @@ public:
 	void change_name(std::string input_name);
 	std::string get_name() const;
 };
-class control_U :public gates
+class padding :public gates
 {
 private:
 	matrix<complex<double>> gate;
-	std::vector<std::string> position;
 	std::string name;
 public:
-	control_U(gates* input_gates)
+	padding()
 	{
-		gate = input_gates->matrix_gate();
-		name = "U";
+		matrix<complex<double>> temp(2, 2);
+		temp[0] = 1;
+		temp[1] = 0;
+		temp[2] = 0;
+		temp[3] = 1;
+		gate = temp;
+		name = "-";
 	}
-	~control_U() {};
+	~padding() {};
 
-	control_U(const control_U& input_H);
-	control_U(control_U&& input_matrix) noexcept;
+	padding(const padding& input_H);
+	padding(padding&& input_matrix) noexcept;
 
-	control_U& operator=(const control_U& right_gate);
-	control_U& operator=(control_U&& right_gate) noexcept;
+	padding& operator=(const padding& right_gate);
+	padding& operator=(padding&& right_gate) noexcept;
 	gates* operator*(const gates& right_gate) const override;
 	qubit operator*(const qubit& input_qubit) const override;
 
-	control_U get_gate() const;
-	void set_position(std::string input_position);
-	std::vector<std::string> get_position();
+	padding get_gate() const;
 	matrix<complex<double>> matrix_gate() const;
 	void change_name(std::string input_name);
 	std::string get_name() const;
 };
+//class control_U :public gates
+//{
+//private:
+//	matrix<complex<double>> gate;
+//	std::vector<std::string> position;
+//	std::string name;
+//public:
+//	control_U(gates* input_gates)
+//	{
+//		gate = input_gates->matrix_gate();
+//		name = "U";
+//	}
+//	~control_U() {};
+//
+//	control_U(const control_U& input_H);
+//	control_U(control_U&& input_matrix) noexcept;
+//
+//	control_U& operator=(const control_U& right_gate);
+//	control_U& operator=(control_U&& right_gate) noexcept;
+//	gates* operator*(const gates& right_gate) const override;
+//	qubit operator*(const qubit& input_qubit) const override;
+//
+//	control_U get_gate() const;
+//	void set_position(std::string input_position);
+//	std::vector<std::string> get_position();
+//	matrix<complex<double>> matrix_gate() const;
+//	void change_name(std::string input_name);
+//	std::string get_name() const;
+//};
 #endif // GATE_H
 
