@@ -7,68 +7,60 @@
 #include <sstream>
 #include <stdlib.h>
 #include <vector>
+#include <memory>
 #include "complex.h"
 
-namespace namespace_one {
+namespace namespace_one 
+{
 	template<class c_type> class matrix;
-	/*template<class c_type> matrix<c_type> operator*(const double& input_double, const matrix<c_type>& input_matrix);
-	template<class c_type> matrix<c_type> operator*(const matrix<c_type>& input_matrix, const double& input_double);
-	template<class c_type> matrix<c_type> operator*(const c_type& input_double, const matrix<c_type>& input_matrix);
-	template<class c_type> matrix<c_type> operator*(const matrix<c_type>& input_matrix, const c_type& input_double);*/
 	template<class c_type> std::ostream& operator<<(std::ostream& ostream, const matrix<c_type>& input_matrix);
 	template<class c_type> void operator>> (std::string input_string, matrix<c_type>& input_matrix);
 
-    template<class c_type> class matrix 
+	template<class c_type> class matrix
 	{
-    protected:
-        size_t num_rows{ 0 };
-        size_t num_columns{ 0 };
-        size_t size{ 0 };
-        c_type* data{ nullptr };
-    public:
-        // constructors
-        matrix() {}
-        matrix(size_t input_num_rows, size_t input_num_columns);
-        ~matrix() { delete[] data; }
-        matrix(const matrix<c_type>& input_matrix);
-        matrix(matrix<c_type>&& input_matrix) noexcept;
+	protected:
+		size_t num_rows{ 0 };
+		size_t num_columns{ 0 };
+		size_t size{ 0 };
+		std::unique_ptr<c_type[]> data{ nullptr };
+	public:
+		// constructors
+		matrix() {}
+		matrix(size_t input_num_rows, size_t input_num_columns);
+		~matrix() {}
+		matrix(const matrix<c_type>& input_matrix);
+		matrix(matrix<c_type>&& input_matrix) noexcept;
 
-        //pass class
-        matrix<c_type> get_self();
-        // get private data;
-        size_t get_size() const;
-        size_t get_columns() const;
-        size_t get_rows() const;
+		//pass class
+		matrix<c_type> get_self();
+		// get private data;
+		size_t get_size() const;
+		size_t get_columns() const;
+		size_t get_rows() const;
+		//void vstack(const matrix<c_type>& right_matrix);
+		//void hstack(const matrix<c_type>& right_matrix);
+		// overload operator
+		c_type& operator[](size_t i) const;
 
-        // overload operator
-        c_type& operator[](size_t i) const;
+		matrix<c_type>& operator=(const matrix<c_type>& right_matrix);
+		matrix<c_type>& operator=(matrix<c_type>&& right_matrix) noexcept;
 
-        matrix<c_type>& operator=(const matrix<c_type>& right_matrix);
-        matrix<c_type>& operator=(matrix<c_type>&& right_matrix) noexcept;
-
-        matrix<c_type> operator+(const matrix<c_type>& right_matrix) const;
-        matrix<c_type> operator-(const matrix<c_type>& right_matrix) const;
-        matrix<c_type> operator*(const matrix<c_type>& right_matrix) const;
+		matrix<c_type> operator+(const matrix<c_type>& right_matrix) const;
+		matrix<c_type> operator-(const matrix<c_type>& right_matrix) const;
+		matrix<c_type> operator*(const matrix<c_type>& right_matrix) const;
 		matrix<c_type> operator*(const c_type& right_complex) const;
-		//matrix<c_type> operator*(const complex<c_type>& right_complex) const;
-
-		//matrix<complex<c_type>> to_complex();
 		matrix<c_type> tensor(const int input_int)const;
 		matrix<c_type> tensor(const matrix<c_type>& right_matrix)const;
 		matrix<c_type> direct_sum(const matrix<c_type>& right_matrix)const;//direct sum
 
-		//friend matrix<c_type> operator*(const double& input_double, const matrix<c_type>& input_matrix);
-		//friend matrix<c_type> operator*(const matrix<c_type>& input_matrix, const double& input_double);
-		//friend matrix<c_type> operator*(const c_type& input_double, const matrix<c_type>& input_matrix);
-		//friend matrix<c_type> operator*(const matrix<c_type>& input_matrix, const c_type& input_double);
-        // functionality
-        matrix<c_type> _delete(size_t del_row, size_t del_column);
-        c_type det();
-        matrix<c_type> clear();
+		// functionality
+		matrix<c_type> _delete(size_t del_row, size_t del_column);
+		c_type det();
+		matrix<c_type> clear();
 
 		friend std::ostream& operator<< <c_type> (std::ostream& ostream, const matrix<c_type>& input_matrix);
 		friend void operator>> <c_type>(std::string input_string, matrix<c_type>& input_matrix);
-    };
+	};
 }
 //template class implementation
 using namespace namespace_one;
@@ -83,9 +75,9 @@ template<class c_type> matrix<c_type>::matrix(size_t input_num_rows, size_t inpu
 		num_rows = input_num_rows;
 		num_columns = input_num_columns;
 		size = num_rows * num_columns;
-		data = new c_type[size];
+		data = std::make_unique<c_type[]>(size);
 	}
-	catch (std::bad_alloc mem) 
+	catch (std::bad_alloc mem)
 	{
 		std::cerr << "Memory allocation fail" << std::endl;
 		exit(0);
@@ -97,23 +89,25 @@ template<class c_type> matrix<c_type>::matrix(const matrix<c_type>& input_matrix
 	num_rows = input_matrix.num_rows;
 	num_columns = input_matrix.num_columns;
 	size = input_matrix.size;
-	data = new c_type[size];
+	data = std::make_unique<c_type[]>(size);
 	for (size_t i = 0; i < size; i++)
 	{
 		data[i] = input_matrix.data[i];
 	}
 }
+
 template<class c_type> matrix<c_type>::matrix(matrix<c_type>&& input_matrix) noexcept//move constructor
 {
 	num_rows = input_matrix.num_rows;
 	num_columns = input_matrix.num_columns;
 	size = input_matrix.size;
-	data = input_matrix.data;
+	data = std::move(input_matrix.data);
 	input_matrix.size = 0;
 	input_matrix.num_columns = 0;
 	input_matrix.num_rows = 0;
 	input_matrix.data = nullptr;
 }
+
 template<class c_type> c_type& matrix<c_type>::operator[](size_t i)const
 {
 
@@ -129,14 +123,13 @@ template<class c_type> matrix<c_type>& matrix<c_type>::operator=(const matrix<c_
 {
 	if (&right_matrix == this) return *this;	//self-assignment check;
 
-	delete[] data;
-	data = nullptr;
+	data.reset();
 	size = 0;
 
 	num_columns = right_matrix.get_columns();
 	num_rows = right_matrix.get_rows();
 	size = num_columns * num_rows;
-	data = new c_type[size];
+	data = std::make_unique<c_type[]>(size);
 	if (size > 0)
 	{
 		for (size_t i{ 0 }; i < size; i++)
@@ -146,12 +139,16 @@ template<class c_type> matrix<c_type>& matrix<c_type>::operator=(const matrix<c_
 	}
 	return *this;
 }
+
 template<class c_type> matrix<c_type>& matrix<c_type>::operator=(matrix<c_type>&& right_matrix) noexcept
 {
-	std::swap(size, right_matrix.size);
-	std::swap(data, right_matrix.data);
-	std::swap(num_columns, right_matrix.num_columns);
-	std::swap(num_rows, right_matrix.num_rows);
+	size = right_matrix.size;
+	data = std::move(right_matrix.data);
+	num_columns = right_matrix.num_columns;
+	num_rows = right_matrix.num_rows;
+	right_matrix.size = 0;
+	right_matrix.num_columns = 0;
+	right_matrix.num_rows = 0;
 	return *this;
 }
 template<class c_type> matrix<c_type> matrix<c_type>::operator+(const matrix<c_type>& right_matrix)const
@@ -230,7 +227,7 @@ template<class c_type> matrix<c_type> matrix<c_type>::operator*(const matrix<c_t
 		return new_matrix;
 	}
 }
-template<class c_type> matrix<c_type> matrix<c_type>::operator*(const c_type& input) const 
+template<class c_type> matrix<c_type> matrix<c_type>::operator*(const c_type& input) const
 {
 	matrix<c_type> new_matrix(num_rows, num_columns);
 	for (size_t i{ 0 }; i < size; i++) { new_matrix.data[i] = data[i] * input; }
@@ -366,6 +363,22 @@ template<class c_type> size_t matrix<c_type>::get_rows() const
 {
 	return num_rows;
 }
+//template<class c_type>void matrix<c_type>::vstack(const matrix<c_type>& right_matrix) 
+//{
+//	if (right_matrix.get_size() == num_columns) 
+//	{
+//		std::copy(data, data + size, right_matrix.data);
+//	}
+//	if (right_matrix.get_size() != num_columns) { std::cout << "Column does not match" << std::endl; exit(0); }
+//}
+//template<class c_type> void matrix<c_type>::hstack(const matrix<c_type>& right_matrix) 
+//{
+//	if (right_matrix.get_size() == num_rows)
+//	{
+//		for (size_t i{}; i < num_rows; i++) { std::copy(data, data + num_columns + i * num_columns, right_matrix.data[i]); }
+//	}
+//	if (right_matrix.get_size() != num_rows) { std::cout << "Column does not match" << std::endl; exit(0); }
+//}
 template<class c_type> matrix<c_type> matrix<c_type>::tensor(const int input_int) const
 {
 
@@ -535,36 +548,4 @@ template<class c_type> void namespace_one::operator>> (std::string input_string,
 		}
 	}
 }
-#endif // MATRIX_H
-
-//template<class c_type> matrix<c_type> matrix<c_type>::operator*(const complex<c_type>& input) const
-//{
-//	std::cout << "here";
-//	matrix<complex<c_type>> new_matrix(num_rows, num_columns);
-//	for (size_t i{ 0 }; i < size; i++) { data[i] = input * data[i]; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const double& input_double, const matrix<c_type>& input_matrix)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const double& input_double)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_double; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const c_type& input_c_type, const matrix<c_type>& input_matrix)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
-//	return new_matrix;
-//}
-//template<class c_type> matrix<c_type> namespace_one::operator*(const matrix<c_type>& input_matrix, const c_type& input_c_type)
-//{
-//	matrix<c_type> new_matrix(input_matrix.num_rows, input_matrix.num_columns);
-//	for (size_t i{ 0 }; i < input_matrix.size; i++) { new_matrix.data[i] = input_matrix.data[i] * input_c_type; }
-//	return new_matrix;
-//}
+#endif //MATRIX_H

@@ -51,5 +51,4 @@ public:
 
 };
 std::ostream& operator<< (std::ostream& ostream, const qubit& input_qubit);
-//void operator>> (std::string input_string, qubit& input_qubit);
 #endif // QUBIT_H

@@ -21,7 +21,7 @@ qubit::qubit()
 	coefficient_1 = input_temp;
 	coefficient_2 = input_temp * 0;
 }
-qubit::qubit(int input_int) 
+qubit::qubit(int input_int)
 {
 	complex<double> one(1, 0);
 	complex<double> zero(0, 0);
@@ -56,7 +56,7 @@ qubit::qubit(complex<double> input_coefficient_1, complex<double> input_coeffici
 	coefficient_1 = input_coefficient_1;
 	coefficient_2 = input_coefficient_2;
 }
-matrix<complex<double>> qubit::matrix_qubit() const 
+matrix<complex<double>> qubit::matrix_qubit() const
 {
 	matrix<complex<double>> new_matrix = basis_1 * coefficient_1 + basis_2 * coefficient_2;
 	return new_matrix;
@@ -116,7 +116,7 @@ void qubit::change_basis(matrix<complex<double>> base_1, matrix<complex<double>>
 	basis_2 = base_2;
 }
 //change qubit state 1 is |1> 0 is |0>.
-void qubit::change_state(int input_int) 
+void qubit::change_state(int input_int)
 {
 	qubit new_qubit(input_int);
 	coefficient_1 = new_qubit.coefficient_1;
@@ -128,31 +128,20 @@ void qubit::change_state(int input_int)
 std::ostream& operator<<(std::ostream& ostream, const qubit& input_qubit)
 {
 
-		if ((input_qubit.coefficient_1.get_real() != 0|| input_qubit.coefficient_1.get_imaginary() != 0 )&& input_qubit.coefficient_2.get_real() != 0||input_qubit.coefficient_2.get_imaginary() != 0)
-		{
-			ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>" << "+" << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
-			return ostream;
-		}
+	if ((input_qubit.coefficient_1.get_real() != 0 || input_qubit.coefficient_1.get_imaginary() != 0) && input_qubit.coefficient_2.get_real() != 0 || input_qubit.coefficient_2.get_imaginary() != 0)
+	{
+		ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>" << "+" << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
+		return ostream;
+	}
 
-		if (input_qubit.coefficient_1.get_real() != 0 && (input_qubit.coefficient_2.get_real() == 0 && input_qubit.coefficient_2.get_imaginary() == 0))
-		{
-			ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>";
-			return ostream;
-		}
-		if (input_qubit.coefficient_2.get_real() != 0 && (input_qubit.coefficient_1.get_real() == 0&& input_qubit.coefficient_1.get_imaginary() == 0))
-		{
-			ostream << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
-			return ostream;
-		}
+	if (input_qubit.coefficient_1.get_real() != 0 && (input_qubit.coefficient_2.get_real() == 0 && input_qubit.coefficient_2.get_imaginary() == 0))
+	{
+		ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>";
+		return ostream;
+	}
+	if (input_qubit.coefficient_2.get_real() != 0 && (input_qubit.coefficient_1.get_real() == 0 && input_qubit.coefficient_1.get_imaginary() == 0))
+	{
+		ostream << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
+		return ostream;
+	}
 }
-//void operator>>(std::string input_string, qubit& input_qubit)
-//{
-//	matrix<complex<double>> new_qubit_basis;
-//	input_string >> new_qubit_basis;
-//	if (new_qubit_basis.get_rows() == 2 && new_qubit_basis.get_columns() == 1)
-//	{
-//		qubit new_qubit(new_qubit_basis[0], new_qubit_basis[1]);
-//		input_qubit = new_qubit;
-//	}
-//}
-

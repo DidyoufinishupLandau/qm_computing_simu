@@ -12,14 +12,6 @@
 namespace namespace_one
 {
 	template<class c_type> class complex;
-	/*template<class c_type> complex<c_type> operator*(const complex<c_type>& real_num, const c_type& complex_num);
-	template<class c_type> complex<c_type> operator*(const c_type& complex_num, const complex<c_type>& real_num);
-	template<class c_type> complex<c_type> operator+(const complex<c_type>& real_num, const c_type& complex_num);
-	template<class c_type> complex<c_type> operator+(const c_type& complex_num, const complex<c_type>& real_num);
-	template<class c_type> complex<c_type> operator-(const complex<c_type>& real_num, const c_type& complex_num);
-	template<class c_type> complex<c_type> operator-(const c_type& complex_num, const complex<c_type>& real_num);
-	template<class c_type> complex<c_type> operator/(const complex<c_type>& real_num, const c_type& complex_num);
-	template<class c_type> complex<c_type> operator/(const c_type& complex_num, const complex<c_type>& real_num);*/
 	template<class c_type> std::ostream& operator<<(std::ostream& ostream, const complex<c_type>& complex_num);
 	template<class c_type> std::istream& operator>>(std::istream& istream, complex<c_type>& complex_num);
 	template<class c_type>  class complex
@@ -63,17 +55,6 @@ namespace namespace_one
 
 		friend std::ostream& operator<< <c_type> (std::ostream& ostream, const complex<c_type>& complex_num);
 		friend std::istream& operator>> <c_type> (std::istream& istream, complex<c_type>& complex_num);
-		//friend complex<c_type> operator*(const complex<c_type>& real_num, const c_type& complex_num);
-		//friend complex<c_type> operator*(const c_type& complex_num, const complex<c_type>& real_num);
-		//friend complex<c_type> operator+(const complex<c_type>& real_num, const c_type& complex_num);
-		//friend complex<c_type> operator+(const c_type& complex_num, const complex<c_type>& real_num);
-		//friend complex<c_type> operator-(const complex<c_type>& real_num, const c_type& complex_num);
-		//friend complex<c_type> operator-(const c_type& complex_num, const complex<c_type>& real_num);
-		//friend complex<c_type> operator/(const complex<c_type>& real_num, const c_type& complex_num);
-		//friend complex<c_type> operator/(const c_type& complex_num, const complex<c_type>& real_num);
-		//complex<c_type> operator*(const matrix<c_type>& matrix) const;
-		//complex<c_type> operator*(const matrix<c_type>& matrix) const;
-
 	};
 }
 #endif //COMPLEX_H
@@ -200,8 +181,8 @@ template<class c_type> void complex<c_type>::operator-=(const c_type& real_num)
 template<class c_type> std::ostream& namespace_one::operator<<(std::ostream& ostream, const complex<c_type>& complex_num)
 {
 	//consider the positive sign and negative sign of imagianry part
-	if (complex_num.y > 0) 
-	{ 
+	if (complex_num.y > 0)
+	{
 		if (complex_num.x > 0)
 		{
 			ostream << "+" << abs(complex_num.x) << " + i" << complex_num.y;
@@ -230,8 +211,8 @@ template<class c_type> std::ostream& namespace_one::operator<<(std::ostream& ost
 			ostream << "" << abs(complex_num.x);
 		}
 	}
-	if (complex_num.y < 0) 
-	{ 
+	if (complex_num.y < 0)
+	{
 		if (complex_num.x > 0)
 		{
 			ostream << "+" << abs(complex_num.x) << " - i" << abs(complex_num.y);
@@ -297,97 +278,3 @@ template<class c_type> std::istream& namespace_one::operator>>(std::istream& ist
 	}
 	return istream;
 }
-
-//template<class c_type> complex<c_type> complex<c_type>::operator+(const c_type& complex_number) const
-//{
-//	complex<c_type> new_complex(x + complex_number, y);
-//	return new_complex;
-//}
-//
-//
-//template<class c_type> complex<c_type> complex<c_type>::operator-(const c_type& complex_number) const
-//{
-//	complex<c_type> new_complex(x - complex_number, y);
-//	return new_complex;
-//}
-//
-//template<class c_type> complex<c_type> complex<c_type>::operator*(const c_type& complex_number) const
-//{
-//	complex<c_type> new_complex(x * complex_number + y * complex_number);
-//	return new_complex;
-//}
-//
-//template<class c_type> complex<c_type> complex<c_type>::operator/(const c_type& complex_number) const
-//{
-//
-//
-//	complex<c_type> new_complex(x/complex_number, y/complex_number);
-//	return new_complex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator*(const complex<c_type>& complex_num, const c_type& real_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() * real_num, complex_num.get_imaginary() * real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator*(const c_type& real_num, const complex<c_type>& complex_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() * real_num, complex_num.get_imaginary() * real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator+(const complex<c_type>& complex_num, const c_type& real_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() + real_num, complex_num.get_imaginary() + real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator+(const c_type& real_num, const complex<c_type>& complex_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() + real_num, complex_num.get_imaginary() + real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator-(const complex<c_type>& complex_num, const c_type& real_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() - real_num, complex_num.get_imaginary() - real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator-(const c_type& real_num, const complex<c_type>& complex_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() - real_num, complex_num.get_imaginary() - real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator/(const complex<c_type>& complex_num, const c_type& real_num)
-//{
-//	complex<c_type> new_comlex(complex_num.get_real() / real_num, complex_num.get_imaginary() / real_num);
-//	return new_comlex;
-//}
-//template<class c_type> complex<c_type> namespace_one::operator/(const c_type& real_num, const complex<c_type>& complex_num)
-//{
-//	complex<c_type> complex_conjugate = complex_num.complex_conjugate();
-//	c_type modulus = complex_num.modulus();
-//	complex<c_type> new_complex = real_num * complex_conjugate / (modulus);
-//	return new_complex;
-//}
-//template<class c_type> complex<c_type>::complex(const c_type& input_complex)
-//{
-//	x = input_complex;
-//	y = 0;
-//}
-//template<class c_type> complex<c_type>::complex<c_type>(c_type&& input_complex) noexcept
-//{
-//	x = input_complex;
-//	y = 0
-//	input_complex = 0;
-//}
-//template<class c_type> complex<c_type>& complex<c_type>::operator=(const c_type& right_c_type)
-//{
-//	std::cout << "here" << std::endl;
-//	x = right_c_type;
-//	y = 0;
-//	return *this;
-//}
-//template<class c_type> complex<c_type>& complex<c_type>::operator=(c_type&& right_c_type) noexcept
-//{
-//	std::swap(x, right_c_type);
-//	right_c_type = 0;
-//	y = 0;
-//	return *this;
-//}

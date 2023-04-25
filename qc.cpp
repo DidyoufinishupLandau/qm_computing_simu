@@ -52,15 +52,14 @@ qc::qc(const int num_qubit, const int state)
 qc::qc(const qc& input_qc)
 {
 	quantum_circuit.clear();
-	quantum_circuit.assign(input_qc.quantum_circuit.begin(), input_qc.quantum_circuit.end());
+	quantum_circuit = input_qc.quantum_circuit;
 }
 qc::qc(qc&& input_qc) noexcept
 {
 	quantum_circuit.clear();
-	quantum_circuit.assign(input_qc.quantum_circuit.begin(), input_qc.quantum_circuit.end());
+	quantum_circuit = input_qc.quantum_circuit;
 	//clear input circuit;
 	input_qc.quantum_circuit.clear();
-
 	//assign the default value to input circuit;
 	wires new_wire;
 	std::vector<qubit> temp_qubit;
@@ -72,7 +71,7 @@ qc::qc(qc&& input_qc) noexcept
 qc& qc::operator=(const qc& right_qc)
 {
 	quantum_circuit.clear();
-	quantum_circuit.assign(right_qc.quantum_circuit.begin(), right_qc.quantum_circuit.end());
+	quantum_circuit = right_qc.quantum_circuit;
 	return *this;
 }
 qc& qc::operator=(qc&& right_qc) noexcept
@@ -80,7 +79,9 @@ qc& qc::operator=(qc&& right_qc) noexcept
 	std::swap(quantum_circuit, right_qc.quantum_circuit);
 	return *this;
 }
-
+std::vector<std::vector<matrix<complex<double>>>> qc::qubit_history{};
+std::vector<std::vector<int>> qc::measurements_history{};
+bool qc::qubit_history_on{ false };
 //functionalities
 int generate_random_number(complex<double> p)
 {
@@ -100,10 +101,10 @@ int generate_random_number(complex<double> p)
 	}
 	return result;
 }
-gates* qc::stog(std::string input_string) 
+gates* qc::stog(std::string input_string)
 {
 	//recognize the string can convert them to correspond gate;
-	if (input_string == "H") 
+	if (input_string == "H")
 	{
 		gates* new_gate = new H();
 		return new_gate;
@@ -145,7 +146,7 @@ gates* qc::stog(std::string input_string)
 	}
 	else { std::cout << "No such gate found. exit..." << std::endl; exit(0); }
 }
-void qc::auto_padding() 
+void qc::auto_padding()
 {
 	//padding the empty space in column with identity matrix
 	int max_num{ 0 };
@@ -158,37 +159,20 @@ void qc::auto_padding()
 	{
 		quantum_circuit[i].push_gate(max_num - quantum_circuit[i].size(), padding_gate);
 	}
-	//std::vector<std::string> gates_name;
-	//std::vector<std::string> identity_gates_name;
-	//for (size_t i = 0; i < quantum_circuit.size(); i++)
-	//{
-	//	identity_gates_name.push_back(quantum_circuit[i][quantum_circuit[i].size() - 1]->get_name());
-	//	identity_gates_name.push_back(padding_gate->get_name());
-	//}
-	//bool valve = true;
-	//for(size_t i = 0; i < gates_name.size(); i++)
-	//{
-	//	if (gates_name[i] != identity_gates_name[i]) { valve = false;  break; }
-	//}
-	//if (valve) 
-	//{
-	//	for (size_t i = 0; i < quantum_circuit.size(); i++)
-	//	{
-	//		quantum_circuit[i].delete_gate(quantum_circuit[i].size());
-	//	}
-	//}
 }
-void qc::bar_chart(matrix<int>& measurement_matrix) const
+void qc::bar_chart() const 
 {
 	std::vector<std::vector<int>> measurement_vector;
-	for (size_t i{}; i < measurement_matrix.get_columns(); i++)
+	int count = 0;//nqubits
+	while (count != quantum_circuit.size())
 	{
 		std::vector<int> temp_vector;
-		for (size_t j{}; j < measurement_matrix.get_rows(); j++)
+		for (size_t i{}; i < measurements_history.size(); i++)
 		{
-			temp_vector.push_back(measurement_matrix[i + j * measurement_matrix.get_columns()]);
+			temp_vector.push_back(measurements_history[i][count]);
 		}
 		measurement_vector.push_back(temp_vector);
+		count += 1;
 	}
 	int max_measurements = 0;
 	for (const auto& qubit_measurement : measurement_vector)
@@ -212,11 +196,11 @@ void qc::bar_chart(matrix<int>& measurement_matrix) const
 		int num_measurement = static_cast<int>(std::count(measurement_vector[qubit].begin(), measurement_vector[qubit].end(), 1));
 		int num_space = max_length - static_cast<int>(num_measurement * scaling_factor);
 		std::cout << "qubit" << (qubit + 1) << ": ";
-		for (int i = 0; i < static_cast<int>(num_measurement * scaling_factor); ++i) 
+		for (int i = 0; i < static_cast<int>(num_measurement * scaling_factor); ++i)
 		{
 			std::cout << "-";
 		}
-		for (int i = 0; i < num_space; ++i) 
+		for (int i = 0; i < num_space; ++i)
 		{
 			std::cout << " ";
 		}
@@ -234,20 +218,44 @@ int qc::wire_length(int nth_wire) const
 	int wire_length = quantum_circuit[nth_wire - 1].size();
 	return wire_length;
 }
+matrix<complex<double>> qc::get_qubit_state(int n_th_wire) 
+{
+	try
+	{
+		wires _ = quantum_circuit.at(n_th_wire - 1);
+		matrix<complex<double>> local_qubit = quantum_circuit[n_th_wire - 1].get_qubit().matrix_qubit();
+		return local_qubit;
+	}
+	catch (const std::out_of_range& error) 
+	{
+		std::cerr << error.what() << std::endl;
+		std::cout << "In get qubit state" << std::endl;
+		std::cout << "Invalid wire position" << std::endl;
+		exit(0);
+	}
+}
 //modify wires
 void qc::insert_wire(size_t wire_start, size_t count, wires input_wire)
 {
-	if (wire_start < 0 || wire_start>0) 
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
+
+	if (wire_start < 0 || wire_start>0)
 	{
 		std::cout << "error occur at insert_wire function" << std::endl;
-		std::cout << "position out of circuit range" << std::endl; 
-		exit(0); 
+		std::cout << "position out of circuit range" << std::endl;
+		exit(0);
 	}
 	quantum_circuit.insert(quantum_circuit.begin() + wire_start, count, input_wire);
 	auto_padding();
 }
 void qc::push_wire(wires input_wire)
 {
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
+
 	quantum_circuit.push_back(input_wire);
 	auto_padding();
 }
@@ -257,6 +265,11 @@ void qc::change_initial_state(size_t start_wire, size_t end_wire, int initial_st
 	{
 		//change qubit states
 		std::vector<qubit> temp_qubit;
+
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
 		for (size_t i{ start_wire - 1 }; i < end_wire; i++)
 		{
 			wires _ = quantum_circuit.at(i);
@@ -276,7 +289,12 @@ void qc::replace_wire(size_t nth_wire, wires input_wire)
 	gates* padding_gate = new padding;
 	std::vector<int> column_to_delete;
 	std::vector<int> column_to_padding;
-	std::vector<wires> new_quantum_circuit(quantum_circuit.size(),1);
+	std::vector<wires> new_quantum_circuit(quantum_circuit.size(), 1);
+
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
+
 	//copy the initial state of quantum circuit;
 	for (size_t i{}; i < quantum_circuit.size(); i++) { new_quantum_circuit[i].change_qubit(quantum_circuit[i].get_qubit()); }
 	try
@@ -331,7 +349,7 @@ void qc::replace_wire(size_t nth_wire, wires input_wire)
 		}
 		new_quantum_circuit[nth_wire - 1] = input_wire;
 		quantum_circuit.clear();
-		quantum_circuit.assign(new_quantum_circuit.begin(), new_quantum_circuit.end());
+		quantum_circuit = new_quantum_circuit;
 	}
 	catch (const std::out_of_range& error)
 	{
@@ -441,8 +459,6 @@ matrix<int> qc::measure()
 			//else do nothing to the qubit.
 			else
 			{
-				qubit local_qubit = quantum_circuit[control_u_pos[0]].get_qubit();
-				std::vector<gates*> local_gates = quantum_circuit[control_u_pos[0]].get_operation();
 				gate_name.clear();
 				temp_gate_name.clear();
 				control_u_pos.clear();
@@ -451,47 +467,34 @@ matrix<int> qc::measure()
 	}
 	//now all of the gate has apply to the circuit, we can take the measurements by generating the random
 	//number according to the Born rule.
+	std::vector<matrix<complex<double>>> temp_qubit_history;
+	std::vector<int> temp_measurements_history;
+
 	for (size_t i{}; i < quantum_circuit.size(); i++)
 	{
 		qubit local_qubit = quantum_circuit[i].get_qubit();
 		complex<double> coefficient_2 = local_qubit.get_coefficient_2();
 		//generate random number.
 		measurements_array[i] = generate_random_number(coefficient_2);
+
+		//get matrix representation of the qubits;
+		if (qubit_history_on) { temp_qubit_history.push_back(local_qubit.matrix_qubit()); }
+		//store the measurements in measurement history
+		temp_measurements_history.push_back(measurements_array[i]);
 	}
+	qubit_history.push_back(temp_qubit_history);
+	measurements_history.push_back(temp_measurements_history);
+	//copy the qubit state and store them in a static matrix;
 	return measurements_array;
 }
-matrix<int> qc::measure(int num_measurement)
+void qc::measure(int num_measurement)
 {
 	//simply iterate with num_measurement times with the measure() function.
-	matrix<int> measurements_array(num_measurement, quantum_circuit.size());
 	for (size_t n{}; n < num_measurement; n++)
 	{
 		qc temp_qc = *this;
 		matrix<int> single_measure = temp_qc.measure();
-		for (size_t i{}; i < quantum_circuit.size(); i++)
-		{
-			measurements_array[i + quantum_circuit.size() * n] = single_measure[i];
-		}
 	}
-	return measurements_array;
-}
-matrix<double> qc::ave_measure(int num_measurements)
-{
-	//take the average of the measurement outcomes.
-	matrix<int> measurements = measure(num_measurements);
-	matrix<double> average_measurements(1, measurements.get_columns());
-	for (size_t i{}; i < measurements.get_rows(); i++)
-	{
-		for (size_t j{}; j < measurements.get_columns(); j++)
-		{
-			average_measurements[j] = average_measurements[j] + measurements[j + measurements.get_columns() * i];
-		}
-	}
-	for (size_t i{}; i < average_measurements.get_columns(); i++)
-	{
-		average_measurements[i] = average_measurements[i] / measurements.get_rows();
-	}
-	return average_measurements;
 }
 
 //modify gates
@@ -509,6 +512,10 @@ void qc::insert_cgate(std::string control_bits_string, std::string cbits_pos_on_
 	gates* one_gates = new one();
 	gates* c_gate = stog(gate_name);
 	c_gate->change_name("U");
+
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
 
 	//get the control bits and control gate position
 	//store them in vector
@@ -597,6 +604,11 @@ void qc::push_cgate(std::string control_bits_string, std::string cbit_pos_qc, st
 	gates* one_gates = new one();
 	gates* c_gate = stog(gate_name);
 	c_gate->change_name("U");
+
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
+
 
 	std::vector<std::string> cbit_pos_operation;
 	std::vector<int> cbits_pos_qc;//cbit position on which wire.
@@ -824,109 +836,11 @@ void qc::push_gate(int n_th_wire, std::string gate_name)
 		auto_padding();
 		wires _ = quantum_circuit.at(n_th_wire - 1);
 		gates* new_gate = stog(gate_name);
-		bool valve = false;
-		for (size_t i{}; i < quantum_circuit.size(); i++)
-		{
-			int pos = quantum_circuit[n_th_wire - 1].size();
-			if (pos > 0)
-			{
-				if (quantum_circuit[i][pos-1]->get_name() == "U" || quantum_circuit[i][pos-1]->get_name() == "u" || quantum_circuit[i][pos-1]->get_name() == "1" || quantum_circuit[i][pos-1]->get_name() == "0")
-				{
-					valve = true;
-					break;
-				}
-			}
-		}
-		int pos = quantum_circuit[n_th_wire - 1].size();
-		if (valve) { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
-		if (!valve && pos>0)
-		{
-			if (quantum_circuit[n_th_wire - 1][pos-1]->get_name() == "-") { quantum_circuit[n_th_wire - 1].change_gate(pos, new_gate);}
-			else if (quantum_circuit[n_th_wire - 1][pos-1]->get_name() != "-") { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
 
-		}
-		if(!valve && pos == 0) { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
-	}
-	catch (const std::out_of_range& error)
-	{
-		std::cerr << "Exception: " << error.what() << std::endl;
-		std::cout << "gate position invalid " << std::endl;
-		std::cout << "Exit program..." << std::endl;
-		exit(0);
-	}
-	auto_padding();
-}
-void qc::insert_gate(int n_th_wire, int pos, std::string gate_name)
-{
-	try
-	{
-		gates* new_gate = stog(gate_name);
-		gates* padding_gate = new padding();
-		bool valve = false;
-		for (size_t i{}; i < quantum_circuit.size(); i++) 
-		{
-			//the inserted gate is right at the column where control operation is, we need to add this gate in new line.
-			if (quantum_circuit[i][pos]->get_name() == "U" || quantum_circuit[i][pos]->get_name() == "u" || quantum_circuit[i][pos]->get_name() == "1" || quantum_circuit[i][pos]->get_name() == "0") 
-			{
-				valve = true;
-				break;
-			}
-		}
-		if (valve) 
-		{
-			for (size_t i{}; i < quantum_circuit.size(); i++)
-			{
-				if (i != n_th_wire - 1)
-				{
-					quantum_circuit[i].insert_gate(pos, padding_gate);
-				}
-				if (i == n_th_wire - 1)
-				{
-					quantum_circuit[i].insert_gate(pos, new_gate);
-				}
-			}
-		}
-		if (!valve)
-		{
-			//if identity matrix and not control operation
-			// we replace the identity gate with the given gate, since identity gate do nothing.
-			if (quantum_circuit[n_th_wire - 1][pos]->get_name() == "-") 
-			{
-				quantum_circuit[n_th_wire - 1].change_gate(pos+1, new_gate);
-				return;
-			}
-			//if not identity gate, we need to add this gate in new line.
-			if (quantum_circuit[n_th_wire - 1][pos]->get_name() != "-")
-			{
-				for (size_t i{}; i < quantum_circuit.size(); i++)
-				{
-					if (i != n_th_wire - 1)
-					{
-						quantum_circuit[i].insert_gate(pos, padding_gate);
-					}
-					if (i == n_th_wire - 1)
-					{
-						quantum_circuit[i].insert_gate(pos, new_gate);
-					}
-				}
-			}
-			auto_padding();
-		}
-	}
-	catch (const std::out_of_range& error)
-	{
-		std::cerr << "Exception: " << error.what() << std::endl;
-		std::cout << "wire position invalid " << std::endl;
-		std::cout << "Exit program..." << std::endl;
-		exit(0);
-	}
-}
-void qc::push_gate(int n_th_wire, gates* new_gate)
-{
-	try
-	{
-		auto_padding();
-		wires _ = quantum_circuit.at(n_th_wire - 1);
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
 		bool valve = false;
 		for (size_t i{}; i < quantum_circuit.size(); i++)
 		{
@@ -959,11 +873,17 @@ void qc::push_gate(int n_th_wire, gates* new_gate)
 	}
 	auto_padding();
 }
-void qc::insert_gate(int n_th_wire, int pos, gates* new_gate)
+void qc::insert_gate(int n_th_wire, int pos, std::string gate_name)
 {
 	try
 	{
+		gates* new_gate = stog(gate_name);
 		gates* padding_gate = new padding();
+
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
 		bool valve = false;
 		for (size_t i{}; i < quantum_circuit.size(); i++)
 		{
@@ -1023,6 +943,178 @@ void qc::insert_gate(int n_th_wire, int pos, gates* new_gate)
 		exit(0);
 	}
 }
+void qc::push_gate(int n_th_wire, gates* new_gate)
+{
+	try
+	{
+		auto_padding();
+		wires _ = quantum_circuit.at(n_th_wire - 1);
+
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
+		bool valve = false;
+		for (size_t i{}; i < quantum_circuit.size(); i++)
+		{
+			int pos = quantum_circuit[n_th_wire - 1].size();
+			if (pos > 0)
+			{
+				if (quantum_circuit[i][pos - 1]->get_name() == "U" || quantum_circuit[i][pos - 1]->get_name() == "u" || quantum_circuit[i][pos - 1]->get_name() == "1" || quantum_circuit[i][pos - 1]->get_name() == "0")
+				{
+					valve = true;
+					break;
+				}
+			}
+		}
+		int pos = quantum_circuit[n_th_wire - 1].size();
+		if (valve) { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
+		if (!valve && pos > 0)
+		{
+			if (quantum_circuit[n_th_wire - 1][pos - 1]->get_name() == "-") { quantum_circuit[n_th_wire - 1].change_gate(pos, new_gate); }
+			else if (quantum_circuit[n_th_wire - 1][pos - 1]->get_name() != "-") { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
+
+		}
+		if (!valve && pos == 0) { quantum_circuit[n_th_wire - 1].push_gate(new_gate); }
+	}
+	catch (const std::out_of_range& error)
+	{
+		std::cerr << "Exception: " << error.what() << std::endl;
+		std::cout << "gate position invalid " << std::endl;
+		std::cout << "Exit program..." << std::endl;
+		exit(0);
+	}
+	auto_padding();
+}
+void qc::insert_gate(int n_th_wire, int pos, gates* new_gate)
+{
+	try
+	{
+		gates* padding_gate = new padding();
+
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
+		bool valve = false;
+		for (size_t i{}; i < quantum_circuit.size(); i++)
+		{
+			//the inserted gate is right at the column where control operation is, we need to add this gate in new line.
+			if (quantum_circuit[i][pos]->get_name() == "U" || quantum_circuit[i][pos]->get_name() == "u" || quantum_circuit[i][pos]->get_name() == "1" || quantum_circuit[i][pos]->get_name() == "0")
+			{
+				valve = true;
+				break;
+			}
+		}
+		if (valve)
+		{
+			for (size_t i{}; i < quantum_circuit.size(); i++)
+			{
+				if (i != n_th_wire - 1)
+				{
+					quantum_circuit[i].insert_gate(pos, padding_gate);
+				}
+				if (i == n_th_wire - 1)
+				{
+					quantum_circuit[i].insert_gate(pos, new_gate);
+				}
+			}
+		}
+		if (!valve)
+		{
+			//if identity matrix and not control operation
+			// we replace the identity gate with the given gate, since identity gate do nothing.
+			if (quantum_circuit[n_th_wire - 1][pos]->get_name() == "-")
+			{
+				quantum_circuit[n_th_wire - 1].change_gate(pos + 1, new_gate);
+				return;
+			}
+			//if not identity gate, we need to add this gate in new line.
+			if (quantum_circuit[n_th_wire - 1][pos]->get_name() != "-")
+			{
+				for (size_t i{}; i < quantum_circuit.size(); i++)
+				{
+					if (i != n_th_wire - 1)
+					{
+						quantum_circuit[i].insert_gate(pos, padding_gate);
+					}
+					if (i == n_th_wire - 1)
+					{
+						quantum_circuit[i].insert_gate(pos, new_gate);
+					}
+				}
+			}
+			auto_padding();
+		}
+	}
+	catch (const std::out_of_range& error)
+	{
+		std::cerr << "Exception: " << error.what() << std::endl;
+		std::cout << "wire position invalid " << std::endl;
+		std::cout << "Exit program..." << std::endl;
+		exit(0);
+	}
+}
+void qc::delete_gate(int wire_pos, int gate_pos) //buggy
+{
+	try
+	{
+		wires _ = quantum_circuit.at(wire_pos - 1);
+		gates* padding_gates = new padding();
+
+		//clear qubit history and measurement history of old quantum circuits;
+		qubit_history.clear();
+		measurements_history.clear();
+
+		if (quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() != "U" && quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() != "u" && quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() != "1" && quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() != "0")
+		{
+			quantum_circuit[wire_pos - 1].change_gate(gate_pos, padding_gates);
+		}
+		if (quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() == "U" || quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() == "u" || quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() == "1" || quantum_circuit[wire_pos - 1][gate_pos - 1]->get_name() == "0")
+		{
+			for (size_t i{}; i < quantum_circuit.size(); i++)
+			{
+				if (quantum_circuit[i][gate_pos - 1]->get_name() == "U" || quantum_circuit[i][gate_pos - 1]->get_name() == "u" || quantum_circuit[i][gate_pos - 1]->get_name() == "1" || quantum_circuit[i][gate_pos - 1]->get_name() != "0")
+				{
+					quantum_circuit[i].change_gate(gate_pos, padding_gates);
+				}
+			}
+		}
+	}
+	catch(const std::out_of_range & error)
+	{
+		std::cerr << "Exception: " << error.what() << std::endl;
+		std::cout << "At delete_gate function" << std::endl;
+		std::cout << "first arg out of bound" << std::endl;
+		exit(0);
+	}
+}
+void qc::delete_gate(int column)
+{
+	//clear qubit history and measurement history of old quantum circuits;
+	qubit_history.clear();
+	measurements_history.clear();
+
+	for (size_t i{}; i < quantum_circuit.size(); i++)
+	{
+		quantum_circuit[i].delete_gate(column);
+	}
+}
+//get private data
+std::vector<std::vector<matrix<complex<double>>>> qc::get_qubit_history() const
+{
+	return qubit_history;
+}
+std::vector<std::vector<int>> qc::get_measurements_history() const
+{
+	return measurements_history;
+}
+void qc::history_switch(bool input)
+{
+	qubit_history_on = input;
+	if (input == true) { std::cout << "start to track qubit state" << std::endl; }
+	if (input == false) { std::cout << "stop to track qubit state" << std::endl; }
+}
 //overloading
 std::ostream& operator<<(std::ostream& ostream, const qc& input_qc)
 {
@@ -1050,14 +1142,13 @@ std::ostream& operator<<(std::ostream& ostream, const qc& input_qc)
 			{
 				ostream << "-";
 			}
-			if(temp_operation[i][j]->get_name() != "u" && temp_operation[i][j]->get_name() != "U" && temp_operation[i][j]->get_name() != "1" && temp_operation[i][j]->get_name() != "0" && temp_operation[i][j]->get_name() != "-")
+			if (temp_operation[i][j]->get_name() != "u" && temp_operation[i][j]->get_name() != "U" && temp_operation[i][j]->get_name() != "1" && temp_operation[i][j]->get_name() != "0" && temp_operation[i][j]->get_name() != "-")
 			{
 				ostream << temp_operation[i][j]->get_name();
 			}
 		}
 		ostream << std::endl;
 	}
-	//input_qc.gates_series.assign(gates_series_holder.begin(), gates_series_holder.end());
 	return ostream;
 }
 wires qc::operator[](size_t i) const
@@ -1070,249 +1161,3 @@ wires qc::operator[](size_t i) const
 
 	return quantum_circuit[i];
 }
-
-//void qc::insert_cgate(std::string control_bits_string, std::string cbits_pos_on_wire, std::string cbits_pos_on_qc, control_U& input_cgate)
-//{
-//	std::vector<std::string> cbit_pos_operation;//operation string
-//	std::vector<int> cbits_pos_wire;//cbit position on each wire
-//	std::vector<int> cbits_pos_qc;//cbit position on quntum circuit
-//	std::vector<int> padding;//padding identity gate to the circuit;
-//	std::string s1;
-//	gates* padding_gates = new I();
-//	gates* zero_gates = new zero();
-//	gates* one_gates = new one();
-//	gates* c_gate = &input_cgate;
-//	input_cgate.set_position(control_bits_string);
-//
-//	//get the control bits and control gate position
-//	//store them in vector
-//	std::stringstream ss1(cbits_pos_on_wire);
-//	while (std::getline(ss1, s1, ','))
-//	{
-//		cbits_pos_wire.push_back(std::stoi(s1));
-//	}
-//	std::stringstream ss2(cbits_pos_on_qc);
-//	while (std::getline(ss2, s1, ','))
-//	{
-//		cbits_pos_qc.push_back(std::stoi(s1));
-//	}
-//	std::stringstream ss3(control_bits_string);
-//	while (std::getline(ss3, s1, ','))
-//	{
-//		cbit_pos_operation.push_back(s1);
-//	}
-//	//find the num of padding and 
-//	//maintain all other control gates components in the same column
-//	std::vector<int> temp;
-//	for (int i = 0; i < quantum_circuit.size(); i++) {
-//		temp.push_back(i + 1);
-//	}
-//	std::set_difference(temp.begin(), temp.end(), cbits_pos_qc.begin(), cbits_pos_qc.end(), std::back_inserter(padding));
-//	temp.clear();//clear temp vector;
-//
-//	int max_value_pos_wire = *max_element(cbits_pos_wire.begin(), cbits_pos_wire.end());
-//	for (size_t i{}; i < cbits_pos_qc.size(); i++) { temp.push_back(max_value_pos_wire - cbits_pos_wire[i]); }
-//	int max_paading = *max_element(temp.begin(), temp.end());
-//
-//	if (cbit_pos_operation.size() == cbits_pos_wire.size() && cbits_pos_wire.size() == cbits_pos_qc.size())
-//	{
-//		//firstly, modify the gates seires.
-//		//find out the maxmum number in input sequence. 
-//		//start from the cbit position on each wire.
-//		//add "-" gate
-//		//
-//		if (cbits_pos_wire.size() == cbits_pos_qc.size())
-//		{
-//			try
-//			{
-//				for (size_t i{}; i < cbits_pos_qc.size(); i++)
-//				{
-//					quantum_circuit.at(cbits_pos_qc[i] - 1);
-//					if (cbit_pos_operation[i] == "1")//if 1 add 1 gate, also padding "I" gate to unify the length of circuit;
-//					{
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(cbits_pos_wire[i], max_value_pos_wire - cbits_pos_wire[i], padding_gates);
-//
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(max_value_pos_wire, one_gates);
-//					}
-//					if (cbit_pos_operation[i] == "0")//if 0 add 1 gate
-//					{
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(cbits_pos_wire[i], max_value_pos_wire - cbits_pos_wire[i], padding_gates);
-//
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(max_value_pos_wire, zero_gates);
-//					}
-//					if (cbit_pos_operation[i] == "u" || cbit_pos_operation[i] == "U")//if U add correspond 2*2 dimension gate
-//					{
-//
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(cbits_pos_wire[i], max_value_pos_wire - cbits_pos_wire[i], padding_gates);
-//
-//						quantum_circuit[cbits_pos_qc[i] - 1].insert_gate(max_value_pos_wire, c_gate);
-//					}
-//				}
-//			}
-//			catch (const std::out_of_range& error)
-//			{
-//				std::cerr << "Exception: " << error.what() << std::endl;
-//				std::cout << "Control gates position invalid " << std::endl;
-//				std::cout << "Exit program..." << std::endl;
-//				exit(0);
-//			}
-//		}
-//		for (size_t i{}; i < padding.size(); i++) { quantum_circuit[padding[i] - 1].insert_gate(max_value_pos_wire, max_paading + 1, padding_gates); }
-//	}
-//	else { std::cout << "Position of control gates is not specified properly" << std::endl; exit(0); }
-//}
-//void qc::push_cgate(std::string control_bits_string, std::string cbit_pos_qc, control_U& input_cgate)
-//{
-//	//initialize
-//	gates* padding_gates = new I();
-//	gates* zero_gates = new zero();
-//	gates* one_gates = new one();
-//	gates* c_gate = &input_cgate;
-//	input_cgate.set_position(control_bits_string);
-//
-//	std::vector<std::string> cbit_pos_operation;
-//	std::vector<int> cbits_pos_qc;//cbit position on which wire.
-//	std::vector<int> wire_length;
-//
-//	//find wire length for padding
-//	for (size_t i{}; i < quantum_circuit.size(); i++)
-//	{
-//		wire_length.push_back(quantum_circuit[i].get_operation().size());
-//	}
-//	int max_value_pos_wire = *max_element(wire_length.begin(), wire_length.end());
-//	//read input
-//	std::string s1;
-//	std::stringstream ss(cbit_pos_qc);
-//	while (std::getline(ss, s1, ','))
-//	{
-//		cbits_pos_qc.push_back(std::stoi(s1));
-//	}
-//	std::stringstream ss2(control_bits_string);
-//	while (std::getline(ss2, s1, ','))
-//	{
-//		cbit_pos_operation.push_back(s1);
-//	}
-//	//padding
-//	if (cbit_pos_operation.size() == cbits_pos_qc.size())
-//	{
-//		auto_padding();
-//		try
-//		{
-//			for (size_t i{}; i < cbit_pos_operation.size(); i++)
-//			{
-//				//read the position on qc. 
-//				//remember to pos-1 to get the true index.
-//				quantum_circuit.at(cbits_pos_qc[i] - 1);
-//				if (cbit_pos_operation[i] == "1")
-//				{
-//					quantum_circuit[cbits_pos_qc[i] - 1].push_gate(one_gates);
-//				}
-//				if (cbit_pos_operation[i] == "0")
-//				{
-//					quantum_circuit[cbits_pos_qc[i] - 1].push_gate(zero_gates);
-//				}
-//				if (cbit_pos_operation[i] == "u" || cbit_pos_operation[i] == "U")
-//				{
-//					quantum_circuit[cbits_pos_qc[i] - 1].push_gate(c_gate);
-//				}
-//			}
-//		}
-//		catch (const std::out_of_range& error)
-//		{
-//			std::cerr << "Exception: " << error.what() << std::endl;
-//			std::cout << "Control gates position invalid " << std::endl;
-//			std::cout << "Exit program..." << std::endl;
-//			exit(0);
-//		}
-//		auto_padding();
-//	}
-//	else { std::cout << "Position of control bits is not specified properly" << std::endl; exit(0); }
-//}
-//void qc::push_gate(int n_th_wire, gates* input_cgate)
-//{
-//	try
-//	{
-//		quantum_circuit.at(n_th_wire - 1);
-//		quantum_circuit[n_th_wire - 1].push_gate(input_cgate);
-//	}
-//	catch (const std::out_of_range& error)
-//	{
-//		std::cerr << "Exception: " << error.what() << std::endl;
-//		std::cout << "gate position invalid " << std::endl;
-//		std::cout << "Exit program..." << std::endl;
-//		exit(0);
-//	}
-//	auto_padding();
-//}
-//void qc::insert_gate(int n_th_wire, int pos, gates* input_gate)
-//{
-//	try
-//	{
-//		gates* padding = new I();
-//		bool valve = false;
-//		for (size_t i{}; i < quantum_circuit.size(); i++) 
-//		{
-//			if (quantum_circuit[i][pos]->get_name() == "U" || quantum_circuit[i][pos]->get_name() == "u" || quantum_circuit[i][pos]->get_name() == "1" || quantum_circuit[i][pos]->get_name() == "0") 
-//			{
-//				valve = true;
-//				break;
-//			}
-//		}
-//		if (valve) 
-//		{
-//			for (size_t i{}; i < quantum_circuit.size(); i++)
-//			{
-//				if (i != n_th_wire - 1)
-//				{
-//					quantum_circuit[i].insert_gate(pos, padding);
-//				}
-//				if (i == n_th_wire - 1)
-//				{
-//					quantum_circuit[i].insert_gate(pos, input_gate);
-//				}
-//			}
-//		}
-//		if (!valve)
-//		{
-//			if (quantum_circuit[n_th_wire - 1][pos]->get_name() == "I") 
-//			{
-//				quantum_circuit[n_th_wire - 1].change_gate(pos+1, input_gate);
-//				return;
-//			}
-//			if (quantum_circuit[n_th_wire - 1][pos]->get_name() != "I")
-//			{
-//				for (size_t i{}; i < quantum_circuit.size(); i++)
-//				{
-//					if (i != n_th_wire - 1)
-//					{
-//						quantum_circuit[i].insert_gate(pos, padding);
-//					}
-//					if (i == n_th_wire - 1)
-//					{
-//						quantum_circuit[i].insert_gate(pos, input_gate);
-//					}
-//				}
-//			}
-//			auto_padding();
-//		}
-//	}
-//	catch (const std::out_of_range& error)
-//	{
-//		std::cerr << "Exception: " << error.what() << std::endl;
-//		std::cout << "wire position invalid " << std::endl;
-//		std::cout << "Exit program..." << std::endl;
-//		exit(0);
-//	}
-//}
-//matrix<complex<double>> qc::matrix_circuit()
-//{
-//	matrix<complex<double>> new_matrix;
-//	new_matrix = 
-//}
-//qc::qc(const wires& input_wire)
-//{
-//	std::vector<qubit> temp_qubit;
-//
-//	quantum_circuit.push_back(input_wire);
-//	temp_qubit.push_back(input_wire.get_qubit());
-//}

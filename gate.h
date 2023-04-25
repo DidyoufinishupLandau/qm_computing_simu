@@ -25,13 +25,13 @@ public:
 	virtual void change_name(std::string input_name) = 0;
 	virtual std::string get_name() const = 0;
 };
-class H:public gates
+class H :public gates
 {
 private:
 	matrix<complex<double>> gate;
 	std::string name;
 public:
-	H() 
+	H()
 	{
 		matrix<complex<double>> temp(2, 2);
 		complex<double> input_complex(pow(2, -0.5), 0);
@@ -92,7 +92,7 @@ public:
 	void change_name(std::string input_name);
 	std::string get_name() const;
 };
-class X:public gates
+class X :public gates
 {
 private:
 	matrix<complex<double>> gate;
@@ -408,34 +408,4 @@ public:
 	void change_name(std::string input_name);
 	std::string get_name() const;
 };
-//class control_U :public gates
-//{
-//private:
-//	matrix<complex<double>> gate;
-//	std::vector<std::string> position;
-//	std::string name;
-//public:
-//	control_U(gates* input_gates)
-//	{
-//		gate = input_gates->matrix_gate();
-//		name = "U";
-//	}
-//	~control_U() {};
-//
-//	control_U(const control_U& input_H);
-//	control_U(control_U&& input_matrix) noexcept;
-//
-//	control_U& operator=(const control_U& right_gate);
-//	control_U& operator=(control_U&& right_gate) noexcept;
-//	gates* operator*(const gates& right_gate) const override;
-//	qubit operator*(const qubit& input_qubit) const override;
-//
-//	control_U get_gate() const;
-//	void set_position(std::string input_position);
-//	std::vector<std::string> get_position();
-//	matrix<complex<double>> matrix_gate() const;
-//	void change_name(std::string input_name);
-//	std::string get_name() const;
-//};
-#endif // GATE_H
-
+#endif
