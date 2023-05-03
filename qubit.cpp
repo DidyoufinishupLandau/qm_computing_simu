@@ -130,18 +130,18 @@ std::ostream& operator<<(std::ostream& ostream, const qubit& input_qubit)
 
 	if ((input_qubit.coefficient_1.get_real() != 0 || input_qubit.coefficient_1.get_imaginary() != 0) && input_qubit.coefficient_2.get_real() != 0 || input_qubit.coefficient_2.get_imaginary() != 0)
 	{
-		ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>" << "+" << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
+		ostream << input_qubit.coefficient_1 << "|0>" << input_qubit.coefficient_2 << "|1>";
 		return ostream;
 	}
 
-	if (input_qubit.coefficient_1.get_real() != 0 && (input_qubit.coefficient_2.get_real() == 0 && input_qubit.coefficient_2.get_imaginary() == 0))
+	if ((input_qubit.coefficient_1.get_real() != 0|| input_qubit.coefficient_1.get_imaginary() != 0) && (input_qubit.coefficient_2.get_real() == 0 && input_qubit.coefficient_2.get_imaginary() == 0))
 	{
-		ostream << pow(input_qubit.coefficient_1.modulus(), 2) << "|0>";
+		ostream << input_qubit.coefficient_1 << "|0>";
 		return ostream;
 	}
-	if (input_qubit.coefficient_2.get_real() != 0 && (input_qubit.coefficient_1.get_real() == 0 && input_qubit.coefficient_1.get_imaginary() == 0))
+	if ((input_qubit.coefficient_2.get_real() != 0 || input_qubit.coefficient_2.get_imaginary() != 0)&& (input_qubit.coefficient_1.get_real() == 0 && input_qubit.coefficient_1.get_imaginary() == 0))
 	{
-		ostream << pow(input_qubit.coefficient_2.modulus(), 2) << "|1>";
+		ostream << input_qubit.coefficient_2 << "|1>";
 		return ostream;
 	}
 }

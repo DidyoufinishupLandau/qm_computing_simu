@@ -23,6 +23,9 @@ private:
 	static std::vector<std::vector<matrix<complex<double>>>> qubit_history;
 	static std::vector<std::vector<int>> measurements_history;
 	static bool qubit_history_on;
+	static int max_history_num;
+	static void clean_history();
+
 public:
 	qc();
 	qc(const int num_qubit, const int state);
@@ -43,20 +46,21 @@ public:
 	std::vector<std::vector<matrix<complex<double>>>> get_qubit_history() const;
 	std::vector<std::vector<int>> get_measurements_history() const;
 	void history_switch(bool input);
+	void set_max_history_num(int num);
 
 	//insert control gates gates
 	gates* stog(std::string input_string);
 	matrix<complex<double>> get_qubit_state(int n_th_wire);
-	void push_cgate(std::string control_bits_string, std::string cbit_pos_wire, std::string gate_name);
-	void insert_cgate(std::string control_bits_string, std::string cbits_pos_on_wire, std::string cbits_pos_on_qc, std::string gate_name);
-	void push_cgate(std::string control_bits_string, std::string cbit_pos_wire, gates* gate_name);
-	void insert_cgate(std::string control_bits_string, std::string cbits_pos_on_wire, std::string cbits_pos_on_qc, gates* input_cgate);
+	void push_cgate(std::string control_bits_string, std::string nth_wire, std::string gate_name);
+	void insert_cgate(std::string control_bits_string, std::string after_nth_gate, std::string nth_wire, std::string gate_name);
+	void push_cgate(std::string control_bits_string, std::string nth_wire, gates* gate_name);
+	void insert_cgate(std::string control_bits_string, std::string after_nth_gate, std::string nth_wire, gates* input_cgate);
 	//insert gates
-	void push_gate(int wire_pos, std::string gate_name);
-	void insert_gate(int wire_pos, int gate_pos, std::string gate_name);
-	void push_gate(int wire_pos, gates* input_cgate);
-	void insert_gate(int wire_pos, int gate_pos, gates* input_cgate);
-	void delete_gate(int wire_pos, int gate_pos);
+	void push_gate(int nth_wire, std::string gate_name);
+	void insert_gate(int nth_wire, int after_nth_gate, std::string gate_name);
+	void push_gate(int nth_wire, gates* input_cgate);
+	void insert_gate(int nth_wire, int after_nth_gate, gates* input_cgate);
+	void delete_gate(int nth_wire, int after_nth_gate);
 	void delete_gate(int column);
 	//number of qubit
 	int num_wire() const;
@@ -68,7 +72,8 @@ public:
 	//measure
 	matrix<int> measure();
 	void measure(int num_measurement);
-	//matrix<complex<double>> matrix_circuit();
+	matrix<complex<double>> matrix_circuit();
+	matrix<complex<double>> matrix_qubit();
 	friend std::ostream& operator<<(std::ostream& ostream, const qc& input_qc);
 };
 std::ostream& operator<<(std::ostream& ostream, const qc& input_qc);

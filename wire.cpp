@@ -226,3 +226,22 @@ void wires::change_gate(int n_th_gate, gates* input_gate)
 		exit(0);
 	}
 }
+matrix<complex<double>> wires::matrix_wire() const 
+{
+	if (operation.size() != 0)
+	{
+		matrix<complex<double>> new_matrix = operation[0]->matrix_gate();
+		for (size_t i{ 1 }; i < operation.size(); i++)
+		{
+			new_matrix = operation[i]->matrix_gate() * new_matrix;
+		}
+		return new_matrix;
+	}
+	if (operation.size() == 0) { std::cout << "Fail, operation size is zero" << std::endl; exit(0); }
+}
+
+matrix<complex<double>> wires::test_gate()
+{
+	matrix<complex<double>> new_matrix = this->matrix_wire()*this->matrix_qubit();
+	return new_matrix;
+}

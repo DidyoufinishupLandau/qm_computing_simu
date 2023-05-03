@@ -22,7 +22,8 @@ protected:
 public:
 	//constructors
 	qubit();
-	qubit(matrix<complex<double>> input_basis_1, matrix<complex<double>> input_basis_2, complex<double> coefficient_1, complex<double> coeffcient_2);
+	qubit(matrix<complex<double>> input_basis_1, matrix<complex<double>> input_basis_2,\
+			complex<double> coefficient_1, complex<double> coeffcient_2);
 	qubit(complex<double> coefficient_1, complex<double> coeffcient_2);
 	qubit(int input_int);
 	qubit(const qubit& input_qubit);//deep copy

@@ -13,7 +13,6 @@
 #include "complex.h"
 #include "matrix.h"
 #include "qubit.h"
-using namespace namespace_one;
 class gates
 {
 public:
@@ -136,8 +135,8 @@ public:
 		complex<double> negative_one(0, -1);
 		complex<double> zero(0, 0);
 		temp[0] = zero;
-		temp[1] = one;
-		temp[2] = negative_one;
+		temp[1] = negative_one;
+		temp[2] = one;
 		temp[3] = zero;
 		gate = temp;
 		name = "Y";

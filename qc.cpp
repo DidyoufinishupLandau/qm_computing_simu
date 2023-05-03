@@ -79,9 +79,11 @@ qc& qc::operator=(qc&& right_qc) noexcept
 	std::swap(quantum_circuit, right_qc.quantum_circuit);
 	return *this;
 }
+//initialize static data
 std::vector<std::vector<matrix<complex<double>>>> qc::qubit_history{};
 std::vector<std::vector<int>> qc::measurements_history{};
 bool qc::qubit_history_on{ false };
+int qc::max_history_num{5000};//default set to 100.
 //functionalities
 int generate_random_number(complex<double> p)
 {
@@ -362,7 +364,131 @@ void qc::replace_wire(size_t nth_wire, wires input_wire)
 	auto_padding();
 
 }
-//measure
+
+//matrix<int> qc::measure()
+//{
+//	//initialize the parameters
+//	std::vector<int> max_counter;
+//	std::vector<int> counter;
+//	std::vector<std::string> gate_name;
+//	std::vector<std::string> temp_gate_name;
+//	std::vector<int> control_u_pos;
+//	matrix<int> measurements_array(1, quantum_circuit.size());
+//	std::vector<int> temp;
+//	//first all padding the circuit so no vector pointer point out of bound
+//	auto_padding();
+//	//find out the maximum length of the quantum circuit.
+//	for (size_t i{}; i < quantum_circuit.size(); i++)
+//	{
+//		temp.push_back(quantum_circuit[i].size());
+//	}
+//	int max_length = *max_element(temp.begin(), temp.end());
+//	//create max counter vector when counter reach max counter
+//	//iteration stop
+//	for (size_t i{}; i < quantum_circuit.size(); i++)
+//	{
+//		counter.push_back(0);
+//		max_counter.push_back(max_length);
+//	}
+//	//while max counter is not equal to counter
+//	//iteration continue
+//	while (max_counter != counter)
+//	{
+//		//parallel computation compute each wire.
+//		//depending on the condition of hardware
+//		//different thread will be used.
+//		//
+//		std::for_each(std::execution::par, quantum_circuit.begin(), quantum_circuit.end(), [&](auto& circuit_thread)
+//			{
+//				size_t i = &circuit_thread - &quantum_circuit[0];
+//				//part one
+//				//read the circuit column by column
+//				//All the control gates are design to allocate in seperate column
+//				//1 represent if control bits be one, control operation is execute.
+//				if (circuit_thread[counter[i]]->get_name() != "u" && circuit_thread[counter[i]]->get_name() != "U" && circuit_thread[counter[i]]->get_name() != "1" && circuit_thread[counter[i]]->get_name() != "0")
+//				{
+//					qubit local_qubit = circuit_thread.get_qubit();
+//					std::vector<gates*> local_gates = circuit_thread.get_operation();
+//					local_qubit = *local_gates[counter[i]] * local_qubit;
+//					circuit_thread.change_qubit(local_qubit);
+//				}
+//				else if (circuit_thread[counter[i]]->get_name() == "1" || circuit_thread[counter[i]]->get_name() == "0")
+//				{
+//					qubit local_qubit = circuit_thread.get_qubit();
+//					int temp_measurement = generate_random_number(local_qubit.get_coefficient_2());
+//#pragma omp critical//keep the thread safe.
+//					{
+//						gate_name.push_back(circuit_thread[counter[i]]->get_name());
+//						temp_gate_name.push_back(std::to_string(temp_measurement));
+//					}
+//				}
+//				else if (circuit_thread[counter[i]]->get_name() == "u" || circuit_thread[counter[i]]->get_name() == "U")
+//				{
+//#pragma omp critical
+//					{
+//						control_u_pos.push_back(i);
+//						control_u_pos.push_back(counter[i]);
+//					}
+//				}
+//
+//#pragma omp atomic
+//				counter[i] += 1;
+//				//at this point a column of whole circuit was readed.
+//				//If no control operation, the calculate has complete.
+//				//The qubit state is modified according to the gate's properties.
+//			});
+//		//if control gate, the next section will be execute.
+//		if (control_u_pos.size() == 2)
+//		{
+//			//The gate_name store the control bit string, temp gate name store the measured
+//			//state of qubit.
+//			//There are only two possibilities, 1 and 0.
+//			//If control bit string match the measured bit string. The control operation will execute.
+//			//For example. if the given control bit string is 101U. U represent unitary operation.
+//			//If the measured state at zero and one gate is 101. Then the unitary operation will be execute
+//			//at given position.
+//			if (gate_name == temp_gate_name)
+//			{
+//				qubit local_qubit = quantum_circuit[control_u_pos[0]].get_qubit();
+//				std::vector<gates*> local_gates = quantum_circuit[control_u_pos[0]].get_operation();
+//				local_qubit = *local_gates[control_u_pos[1]] * local_qubit;
+//				quantum_circuit[control_u_pos[0]].change_qubit(local_qubit);
+//
+//				gate_name.clear();
+//				temp_gate_name.clear();
+//				control_u_pos.clear();
+//			}
+//			//else do nothing to the qubit.
+//			else
+//			{
+//				gate_name.clear();
+//				temp_gate_name.clear();
+//				control_u_pos.clear();
+//			}
+//		}
+//	}
+//	//now all of the gate has apply to the circuit, we can take the measurements by generating the random
+//	//number according to the Born rule.
+//	std::vector<matrix<complex<double>>> temp_qubit_history;
+//	std::vector<int> temp_measurements_history;
+//
+//	for (size_t i{}; i < quantum_circuit.size(); i++)
+//	{
+//		qubit local_qubit = quantum_circuit[i].get_qubit();
+//		complex<double> coefficient_2 = local_qubit.get_coefficient_2();
+//		//generate random number.
+//		measurements_array[i] = generate_random_number(coefficient_2);
+//
+//		//get matrix representation of the qubits;
+//		if (qubit_history_on) { temp_qubit_history.push_back(local_qubit.matrix_qubit()); }
+//		//store the measurements in measurement history
+//		temp_measurements_history.push_back(measurements_array[i]);
+//	}
+//	qubit_history.push_back(temp_qubit_history);
+//	measurements_history.push_back(temp_measurements_history);
+//	//copy the qubit state and store them in a static matrix;
+//	return measurements_array;
+//}
 matrix<int> qc::measure()
 {
 	//initialize the parameters
@@ -392,59 +518,32 @@ matrix<int> qc::measure()
 	//iteration continue
 	while (max_counter != counter)
 	{
-		//parallel computation compute each wire.
-		//depending on the condition of hardware
-		//different thread will be used.
-		//
-		std::for_each(std::execution::par, quantum_circuit.begin(), quantum_circuit.end(), [&](auto& circuit_thread)
+		for (size_t i{}; i < quantum_circuit.size(); i++)
+		{
+			if (quantum_circuit[i][counter[i]]->get_name() != "u" && quantum_circuit[i][counter[i]]->get_name() != "U" && quantum_circuit[i][counter[i]]->get_name() != "1" && quantum_circuit[i][counter[i]]->get_name() != "0")
 			{
-				size_t i = &circuit_thread - &quantum_circuit[0];
-				//part one
-				//read the circuit column by column
-				//All the control gates are design to allocate in seperate column
-				//1 represent if control bits be one, control operation is execute.
-				if (circuit_thread[counter[i]]->get_name() != "u" && circuit_thread[counter[i]]->get_name() != "U" && circuit_thread[counter[i]]->get_name() != "1" && circuit_thread[counter[i]]->get_name() != "0")
-				{
-					qubit local_qubit = circuit_thread.get_qubit();
-					std::vector<gates*> local_gates = circuit_thread.get_operation();
-					local_qubit = *local_gates[counter[i]] * local_qubit;
-					circuit_thread.change_qubit(local_qubit);
-				}
-				else if (circuit_thread[counter[i]]->get_name() == "1" || circuit_thread[counter[i]]->get_name() == "0")
-				{
-					qubit local_qubit = circuit_thread.get_qubit();
-					int temp_measurement = generate_random_number(local_qubit.get_coefficient_2());
-#pragma omp critical//keep the thread safe.
-					{
-						gate_name.push_back(circuit_thread[counter[i]]->get_name());
-						temp_gate_name.push_back(std::to_string(temp_measurement));
-					}
-				}
-				else if (circuit_thread[counter[i]]->get_name() == "u" || circuit_thread[counter[i]]->get_name() == "U")
-				{
-#pragma omp critical
-					{
-						control_u_pos.push_back(i);
-						control_u_pos.push_back(counter[i]);
-					}
-				}
+				qubit local_qubit = quantum_circuit[i].get_qubit();
+				std::vector<gates*> local_gates = quantum_circuit[i].get_operation();
+				local_qubit = *local_gates[counter[i]] * local_qubit;
+				quantum_circuit[i].change_qubit(local_qubit);
+			}
+			if (quantum_circuit[i][counter[i]]->get_name() == "1" || quantum_circuit[i][counter[i]]->get_name() == "0")
+			{
+				qubit local_qubit = quantum_circuit[i].get_qubit();
+				int temp_measurement = generate_random_number(local_qubit.get_coefficient_2());
+				gate_name.push_back(quantum_circuit[i][counter[i]]->get_name());//check does this two set of string match
+				temp_gate_name.push_back(std::to_string(temp_measurement));
 
-#pragma omp atomic
-				counter[i] += 1;
-				//at this point a column of whole circuit was readed.
-				//If no control operation, the calculate has complete.
-				//The qubit state is modified according to the gate's properties.
-			});
-		//if control gate, the next section will be execute.
+			}
+			if (quantum_circuit[i][counter[i]]->get_name() == "u" || quantum_circuit[i][counter[i]]->get_name() == "U")
+			{
+				control_u_pos.push_back(i);
+				control_u_pos.push_back(counter[i]);
+			}
+			counter[i] += 1;
+		}
 		if (control_u_pos.size() == 2)
 		{
-			//The gate_name store the control bit string, temp gate name store the measured
-			//state of qubit.
-			//There are only two possibilities, 1 and 0.
-			//If control bit string match the measured bit string. The control operation will execute.
-			//For example. if the given control bit string is 101U. U represent unitary operation.
-			//If the measured state at zero and one gate is 101. Then the unitary operation will be execute
-			//at given position.
 			if (gate_name == temp_gate_name)
 			{
 				qubit local_qubit = quantum_circuit[control_u_pos[0]].get_qubit();
@@ -456,7 +555,6 @@ matrix<int> qc::measure()
 				temp_gate_name.clear();
 				control_u_pos.clear();
 			}
-			//else do nothing to the qubit.
 			else
 			{
 				gate_name.clear();
@@ -482,8 +580,9 @@ matrix<int> qc::measure()
 		//store the measurements in measurement history
 		temp_measurements_history.push_back(measurements_array[i]);
 	}
-	qubit_history.push_back(temp_qubit_history);
+	if (qubit_history_on) { qubit_history.push_back(temp_qubit_history); }
 	measurements_history.push_back(temp_measurements_history);
+	clean_history();
 	//copy the qubit state and store them in a static matrix;
 	return measurements_array;
 }
@@ -1022,8 +1121,8 @@ void qc::insert_gate(int n_th_wire, int pos, gates* new_gate)
 		}
 		if (!valve)
 		{
-			//if identity matrix and not control operation
-			// we replace the identity gate with the given gate, since identity gate do nothing.
+			// if identity matrix and not control operation
+			// we replace the identity gate with the given gate, since identity gate do nothing to the state of qubit.
 			if (quantum_circuit[n_th_wire - 1][pos]->get_name() == "-")
 			{
 				quantum_circuit[n_th_wire - 1].change_gate(pos + 1, new_gate);
@@ -1160,4 +1259,84 @@ wires qc::operator[](size_t i) const
 	}
 
 	return quantum_circuit[i];
+}
+//modify static function and data
+void qc::clean_history() 
+{
+	if (qubit_history.size() > max_history_num) { qubit_history.clear(); std::cout << "Qubit history cleared" << std::endl; }
+	if (measurements_history.size() > max_history_num) { measurements_history.clear(); std::cout << "Measurement history cleared" << std::endl;}
+}
+void qc::set_max_history_num(int input_int) 
+{
+	//set the number of history stored to be
+	max_history_num = input_int;
+}
+matrix<complex<double>> qc::matrix_circuit()
+{
+	matrix<complex<double>> projection_zero;
+	matrix<complex<double>> projection_one;
+	matrix<complex<double>> identity;
+	matrix<complex<double>> final_matrix;
+
+	"1,0;0,0" >> projection_zero;
+	"0,0;0,1" >> projection_one;
+	"1,0;0,1" >> identity;
+	int quantum_circuit_length = quantum_circuit[0].size();//get the length of the quantum circuit
+	int count = 0;
+	while (count != quantum_circuit_length)
+	{
+		bool valve{ false };
+		std::vector<std::string> gate_name_string;
+		matrix<complex<double>> circuit_matrix;
+		for (size_t i{ 0 }; i < quantum_circuit.size(); i++)
+		{
+			gate_name_string.push_back(quantum_circuit[i][count]->get_name());
+			if(quantum_circuit[i][count]->get_name()!="u"&& quantum_circuit[i][count]->get_name()!="U"&& quantum_circuit[i][count]->get_name() != "1"&& quantum_circuit[i][count]->get_name() != "0")
+			{ 
+				circuit_matrix = circuit_matrix.tensor(quantum_circuit[i][count]->matrix_gate()); 
+			}
+			if (quantum_circuit[i][count]->get_name() == "1")
+			{
+				circuit_matrix = circuit_matrix.tensor(identity);
+			}
+			if (quantum_circuit[i][count]->get_name() == "0")
+			{
+				circuit_matrix = circuit_matrix.tensor(identity);
+			}
+			if (quantum_circuit[i][count]->get_name() == "U" || quantum_circuit[i][count]->get_name() == "u")
+			{
+				circuit_matrix = circuit_matrix.tensor(identity);
+				valve = true;
+			}
+		}
+		matrix<complex<double>> temp_matrix;
+		for (size_t i{ 0 }; i < gate_name_string.size(); i++)
+		{
+			if (gate_name_string[i] == "1") { temp_matrix = temp_matrix.tensor(projection_one); }
+			if (gate_name_string[i] == "0") { temp_matrix = temp_matrix.tensor(projection_zero); }
+			if (gate_name_string[i] == "u"|| gate_name_string[i] == "U") 
+			{ 
+				temp_matrix = temp_matrix.tensor(quantum_circuit[i][count]->matrix_gate() - identity);
+			}
+			if (gate_name_string[i] != "1" && gate_name_string[i] != "0" && gate_name_string[i] != "u" && gate_name_string[i] != "U")
+			{
+				temp_matrix = temp_matrix.tensor(quantum_circuit[i][count]->matrix_gate());
+			}
+		}
+
+		if (valve) { circuit_matrix = circuit_matrix + temp_matrix; }
+		if (final_matrix.get_size() == 0) { final_matrix = circuit_matrix; }
+		else if (final_matrix.get_size() != 0) { final_matrix = circuit_matrix * final_matrix;  }
+		count += 1;
+	}
+	return final_matrix;
+}
+matrix<complex<double>> qc::matrix_qubit() 
+{
+	matrix<complex<double>> qubit_state;
+	for (size_t i{}; i < quantum_circuit.size(); i++) 
+	{
+		qubit_state = qubit_state.tensor(quantum_circuit[i].matrix_qubit());
+	}
+	return qubit_state;
 }

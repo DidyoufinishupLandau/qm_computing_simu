@@ -426,14 +426,17 @@ template<class c_type> matrix<c_type> matrix<c_type>::tensor(const matrix<c_type
 	size_t new_rows = num_rows * right_matrix.get_rows();
 	size_t new_columns = num_columns * right_matrix.get_columns();
 	size_t new_size = new_rows * new_columns;
+	//initialize 2D vector;
 	matrix<c_type> new_matrix(new_rows, new_columns);
 	int count{ 0 };
 	int shift{ 0 };
-
+	//if out matrix is not initialize yet
+	if (size == 0) { return right_matrix; }
+	//if initialize
 	for (size_t i{ 0 }; i < size; i++)
 	{
 		matrix<c_type> segment(right_matrix.get_rows(), right_matrix.get_columns());
-		for (size_t j{ 0 }; j < right_matrix.size; j++)
+		for (size_t j{ 0 }; j < right_matrix.get_size(); j++)
 		{
 			segment[j] = data[i] * right_matrix[j];
 		}
@@ -442,13 +445,13 @@ template<class c_type> matrix<c_type> matrix<c_type>::tensor(const matrix<c_type
 		{
 			for (size_t n{ 0 }; n < segment.num_columns; n++)
 			{
-				if (count > right_matrix.num_columns)
+				if (count > num_columns)
 				{
 					count = 0;
 					shift += 1;
 				}
 
-				new_matrix[i * right_matrix.get_columns() + n + m * new_columns + shift * new_columns * (right_matrix.get_rows() - 1)] = segment[n + m * segment.num_columns];
+				new_matrix[i * right_matrix.get_rows() + n + m * new_columns + shift * new_columns * (right_matrix.get_columns() - 1)] = segment[n + m * segment.num_columns];
 			}
 		}
 	}
@@ -498,7 +501,7 @@ template<class c_type> std::ostream& namespace_one::operator<< (std::ostream& os
 	}
 	if (size == 0)
 	{
-		ostream << "[]" << std::endl;
+		ostream << "[]";
 	}
 	return ostream;
 }

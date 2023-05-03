@@ -32,7 +32,8 @@ public:
     //get self
     wires get_wire() const;
     std::vector<gates*> get_operation() const;
-
+    //matrix gates
+    matrix<complex<double>> matrix_wire() const;
     //insert gates
     void insert_gate(int n_th_gate, gates* input_gate);
     void push_gate(gates* input_gate);
@@ -47,6 +48,9 @@ public:
     void delete_gate(int n_th_gate);
     //print out wire;
     void print();
+    //test gate
+    matrix<complex<double>> test_gate();
+    //get number of gates on wire
     int size() const;
 };
 

@@ -228,53 +228,50 @@ template<class c_type> std::ostream& namespace_one::operator<<(std::ostream& ost
 	}
 	return ostream;
 }
-
-bool is_numeric(std::string string);
-
-template<class c_type> std::istream& namespace_one::operator>>(std::istream& istream, complex<c_type>& complex_num)
-{
-	c_type x_val;
-	c_type y_val;
-	std::string input_string;
-	//read only single line
-	if (std::getline(istream, input_string))
-	{
-		std::string s1;
-		std::string s2;
-		std::string s3;
-		std::stringstream ss(input_string);
-		//pass the input to s1, s2 s3. 
-		//s1 is real part 
-		//s2 is + or - sign. 
-		//s3 is imaginary part 
-		ss >> s1;
-		ss >> s2;
-		std::getline(ss, s3, 'i');
-		ss >> s3;
-		//return positive imagianry part
-		if (is_numeric(s1) && is_numeric(s3) && (s2 == "+"))
-		{
-			x_val = std::stod(s1);
-			y_val = std::stod(s3);
-			complex_num.x = x_val;
-			complex_num.y = y_val;
-			return istream;
-		}
-		//return negative imaginary part
-		if (is_numeric(s1) && is_numeric(s3) && (s2 == "-"))
-		{
-			x_val = std::stod(s1);
-			y_val = std::stod(s3);
-			complex_num.x = x_val;
-			complex_num.y = -y_val;
-			return istream;
-		}
-		//input error
-		else
-		{
-			std::cout << "Invalid input format for complex number" << std::endl;
-			return istream;
-		}
-	}
-	return istream;
-}
+//template<class c_type> std::istream& namespace_one::operator>>(std::istream& istream, complex<c_type>& complex_num)
+//{
+//	c_type x_val;
+//	c_type y_val;
+//	std::string input_string;
+//	//read only single line
+//	if (std::getline(istream, input_string))
+//	{
+//		std::string s1;
+//		std::string s2;
+//		std::string s3;
+//		std::stringstream ss(input_string);
+//		//pass the input to s1, s2 s3. 
+//		//s1 is real part 
+//		//s2 is + or - sign. 
+//		//s3 is imaginary part 
+//		ss >> s1;
+//		ss >> s2;
+//		std::getline(ss, s3, 'i');
+//		ss >> s3;
+//		//return positive imagianry part
+//		if (is_numeric(s1) && is_numeric(s3) && (s2 == "+"))
+//		{
+//			x_val = std::stod(s1);
+//			y_val = std::stod(s3);
+//			complex_num.x = x_val;
+//			complex_num.y = y_val;
+//			return istream;
+//		}
+//		//return negative imaginary part
+//		if (is_numeric(s1) && is_numeric(s3) && (s2 == "-"))
+//		{
+//			x_val = std::stod(s1);
+//			y_val = std::stod(s3);
+//			complex_num.x = x_val;
+//			complex_num.y = -y_val;
+//			return istream;
+//		}
+//		//input error
+//		else
+//		{
+//			std::cout << "Invalid input format for complex number" << std::endl;
+//			return istream;
+//		}
+//	}
+//	return istream;
+//}
